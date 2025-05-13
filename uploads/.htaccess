@@ -1,0 +1,11 @@
+# Deny access to files with these extensions
+<FilesMatch "\.(php|php3|php4|php5|phtml|pl|py|jsp|asp|htm|html|shtml|sh|cgi)$">
+Order Deny,Allow
+Deny from all
+</FilesMatch>
+
+# Allow access to images and documents
+<FilesMatch "\.(jpg|jpeg|png|gif|pdf|doc|docx)$">
+Order Allow,Deny
+Allow from all
+</FilesMatch>
