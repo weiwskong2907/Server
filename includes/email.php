@@ -1,6 +1,8 @@
 <?php
 require_once 'config.php';
-require 'vendor/autoload.php';
+require '../PHPMailer/src/Exception.php';
+require '../PHPMailer/src/PHPMailer.php';
+require '../PHPMailer/src/SMTP.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -31,8 +33,7 @@ function send_email($to, $subject, $message) {
         $mail->send();
         return true;
     } catch (Exception $e) {
-        // For debugging
-        // error_log("Message could not be sent. Mailer Error: {$mail->ErrorInfo}");
+        error_log("Message could not be sent. Mailer Error: {$mail->ErrorInfo}");
         return false;
     }
 }
