@@ -39,10 +39,10 @@
                     </li>
                     <?php endif; ?>
                     <li class="nav-item">
-                        <a class="nav-link" href="#"><i class="fas fa-info-circle me-1"></i> About</a>
+                        <a class="nav-link" href="about.php"><i class="fas fa-info-circle me-1"></i> About</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#"><i class="fas fa-envelope me-1"></i> Contact</a>
+                        <a class="nav-link" href="contact.php"><i class="fas fa-envelope me-1"></i> Contact</a>
                     </li>
                 </ul>
                 

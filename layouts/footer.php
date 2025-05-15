@@ -12,7 +12,16 @@
                 </div>
             </div>
             <div class="col-md-4 text-center text-md-end">
-                <p class="small">&copy; <?php echo date('Y'); ?> <?php echo SITE_NAME; ?>. All rights reserved.</p>
+                <p class="small mb-3">&copy; <?php echo date('Y'); ?> <?php echo SITE_NAME; ?>. All rights reserved.</p>
+                
+                <!-- Quick Links Section -->
+                <h6 class="mb-2">Quick Links</h6>
+                <ul class="list-unstyled small">
+                    <li class="mb-1"><a href="index.php" class="text-white text-decoration-none">Home</a></li>
+                    <li class="mb-1"><a href="about.php" class="text-white text-decoration-none">About Us</a></li>
+                    <li class="mb-1"><a href="privacy.php" class="text-white text-decoration-none">Privacy Policy</a></li>
+                    <li><a href="contact.php" class="text-white text-decoration-none">Contact Us</a></li>
+                </ul>
             </div>
         </div>
     </div>
