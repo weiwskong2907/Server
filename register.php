@@ -7,6 +7,7 @@ $error = '';
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $username = trim($_POST['username']);
     $email = trim($_POST['email']);
+    $birthday = $_POST['birthday'];
     $password = $_POST['password'];
     $confirm_password = $_POST['confirm_password'];
     
@@ -24,17 +25,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($stmt->fetch()) {
             $error = "Username already exists";
         } else {
-            // Create user
-            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare("INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
-            
-            if ($stmt->execute([$username, $email, $hashed_password])) {
-                $_SESSION['user_id'] = $pdo->lastInsertId();
-                $_SESSION['username'] = $username;
-                header("Location: index.php");
-                exit();
+            // Check if email exists
+            $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+            $stmt->execute([$email]);
+            if ($stmt->fetch()) {
+                $error = "Email address already in use";
             } else {
-                $error = "Error creating account";
+                // Create user
+                $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+                $stmt = $pdo->prepare("INSERT INTO users (username, email, birthday, password) VALUES (?, ?, ?, ?)");
+                
+                if ($stmt->execute([$username, $email, $birthday, $hashed_password])) {
+                    $_SESSION['user_id'] = $pdo->lastInsertId();
+                    $_SESSION['username'] = $username;
+                    header("Location: index.php");
+                    exit();
+                } else {
+                    $error = "Error creating account";
+                }
             }
         }
     }
@@ -61,6 +69,10 @@ include 'layouts/header.php';
                         <div class="form-group mb-3">
                             <label>Email</label>
                             <input type="email" name="email" class="form-control" required>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label>Birthday</label>
+                            <input type="date" name="birthday" class="form-control">
                         </div>
                         <div class="form-group mb-3">
                             <label>Password</label>

@@ -19,51 +19,64 @@ $success = '';
 $errors = [];
 
 // Handle delete post action
+// Handle delete post action
 if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id'])) {
-    $stmt = $pdo->prepare("SELECT * FROM posts WHERE id = ? AND user_id = ?");
-    $stmt->execute([$_GET['id'], $_SESSION['user_id']]);
+    // First, get the post details
+    $stmt = $pdo->prepare("SELECT * FROM posts WHERE id = ?");
+    $stmt->execute([$_GET['id']]);
     $post = $stmt->fetch();
     
+    // Check if post exists
     if ($post) {
-        $pdo->beginTransaction();
-        try {
-            // Delete post tags
-            $stmt = $pdo->prepare("DELETE FROM post_tags WHERE post_id = ?");
-            $stmt->execute([$_GET['id']]);
-            
-            // Delete comments
-            $stmt = $pdo->prepare("DELETE FROM comments WHERE post_id = ?");
-            $stmt->execute([$_GET['id']]);
-            
-            // Get attachments to delete files
-            $stmt = $pdo->prepare("SELECT filename FROM attachments WHERE post_id = ?");
-            $stmt->execute([$_GET['id']]);
-            $attachments = $stmt->fetchAll(PDO::FETCH_COLUMN);
-            
-            // Delete attachment records
-            $stmt = $pdo->prepare("DELETE FROM attachments WHERE post_id = ?");
-            $stmt->execute([$_GET['id']]);
-            
-            // Delete the post
-            $stmt = $pdo->prepare("DELETE FROM posts WHERE id = ? AND user_id = ?");
-            $stmt->execute([$_GET['id'], $_SESSION['user_id']]);
-            
-            $pdo->commit();
-            
-            // Delete attachment files
-            foreach ($attachments as $filename) {
-                $file_path = __DIR__ . '/uploads/' . $filename;
-                if (file_exists($file_path)) {
-                    unlink($file_path);
+        // Check if current user is the owner
+        if ($post['user_id'] == $_SESSION['user_id']) {
+            // Check if this is the A002 user trying to delete A001's post
+            if ($_SESSION['username'] == 'A002' && getUsernameById($pdo, $post['user_id']) == 'A001') {
+                $error = "You don't have permission to delete posts created by A001";
+            } else {
+                $pdo->beginTransaction();
+                try {
+                    // Delete post tags
+                    $stmt = $pdo->prepare("DELETE FROM post_tags WHERE post_id = ?");
+                    $stmt->execute([$_GET['id']]);
+                    
+                    // Delete comments
+                    $stmt = $pdo->prepare("DELETE FROM comments WHERE post_id = ?");
+                    $stmt->execute([$_GET['id']]);
+                    
+                    // Get attachments to delete files
+                    $stmt = $pdo->prepare("SELECT filename FROM attachments WHERE post_id = ?");
+                    $stmt->execute([$_GET['id']]);
+                    $attachments = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                    
+                    // Delete attachment records
+                    $stmt = $pdo->prepare("DELETE FROM attachments WHERE post_id = ?");
+                    $stmt->execute([$_GET['id']]);
+                    
+                    // Delete the post
+                    $stmt = $pdo->prepare("DELETE FROM posts WHERE id = ?");
+                    $stmt->execute([$_GET['id']]);
+                    
+                    $pdo->commit();
+                    
+                    // Delete attachment files
+                    foreach ($attachments as $filename) {
+                        $file_path = __DIR__ . '/uploads/' . $filename;
+                        if (file_exists($file_path)) {
+                            unlink($file_path);
+                        }
+                    }
+                    
+                    header("Location: index.php?success=post_deleted");
+                    exit();
+                } catch (Exception $e) {
+                    $pdo->rollBack();
+                    $error = "Error deleting post: " . $e->getMessage();
+                    error_log("Database error: " . $e->getMessage());
                 }
             }
-            
-            header("Location: index.php?success=post_deleted");
-            exit();
-        } catch (Exception $e) {
-            $pdo->rollBack();
-            $error = "Error deleting post: " . $e->getMessage();
-            error_log("Database error: " . $e->getMessage());
+        } else {
+            $error = "You don't have permission to delete this post";
         }
     } else {
         header("Location: index.php");
@@ -74,13 +87,26 @@ if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id']))
 // Handle edit post action
 if (isset($_GET['action']) && $_GET['action'] == 'edit' && isset($_GET['id'])) {
     // Get post data for editing
-    $stmt = $pdo->prepare("SELECT * FROM posts WHERE id = ? AND user_id = ?");
-    $stmt->execute([$_GET['id'], $_SESSION['user_id']]);
+    $stmt = $pdo->prepare("SELECT * FROM posts WHERE id = ?");
+    $stmt->execute([$_GET['id']]);
     $edit_post = $stmt->fetch();
     
     if (!$edit_post) {
-        // Either post doesn't exist or doesn't belong to current user
+        // Post doesn't exist
         header("Location: index.php");
+        exit();
+    }
+    
+    // Check if current user is the owner
+    if ($edit_post['user_id'] != $_SESSION['user_id']) {
+        // Not the owner
+        header("Location: index.php?error=not_authorized");
+        exit();
+    }
+    
+    // Check if this is A002 trying to edit A001's post
+    if ($_SESSION['username'] == 'A002' && getUsernameById($pdo, $edit_post['user_id']) == 'A001') {
+        header("Location: index.php?error=not_authorized_a002");
         exit();
     }
     

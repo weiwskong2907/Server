@@ -34,15 +34,18 @@ include 'layouts/header.php';
                     <?php endif; ?>
                     
                     <form method="POST">
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label>Username</label>
                             <input type="text" name="username" class="form-control" required>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label>Password</label>
                             <input type="password" name="password" class="form-control" required>
                         </div>
-                        <button type="submit" class="btn btn-primary">Login</button>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <button type="submit" class="btn btn-primary">Login</button>
+                            <a href="forgot_password.php" class="text-decoration-none">Forgot Password?</a>
+                        </div>
                     </form>
                 </div>
             </div>

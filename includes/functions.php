@@ -65,4 +65,13 @@ function is_admin($user_id) {
     $stmt->execute([$user_id]);
     return (bool)$stmt->fetchColumn();
 }
+
+/**
+ * Get username by user ID
+ */
+function getUsernameById($pdo, $user_id) {
+    $stmt = $pdo->prepare("SELECT username FROM users WHERE id = ?");
+    $stmt->execute([$user_id]);
+    return $stmt->fetchColumn();
+}
 ?>
