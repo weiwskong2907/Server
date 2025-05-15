@@ -1,14 +1,43 @@
 <?php
 require_once 'config.php';
+require 'vendor/autoload.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 
 function send_email($to, $subject, $message) {
-    $headers = "MIME-Version: 1.0" . "\r\n";
-    $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-    $headers .= 'From: ' . SITE_NAME . ' <noreply@' . $_SERVER['HTTP_HOST'] . '>' . "\r\n";
+    // Create a new PHPMailer instance
+    $mail = new PHPMailer(true);
     
-    return mail($to, $subject, $message, $headers);
+    try {
+        // Server settings
+        $mail->isSMTP();                                      // Use SMTP
+        $mail->Host       = SMTP_HOST;                        // SMTP server
+        $mail->SMTPAuth   = true;                             // Enable SMTP authentication
+        $mail->Username   = SMTP_USER;                        // SMTP username
+        $mail->Password   = SMTP_PASS;                        // SMTP password
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;   // Enable TLS encryption
+        $mail->Port       = SMTP_PORT;                        // TCP port to connect to
+
+        // Recipients
+        $mail->setFrom(SMTP_FROM_EMAIL, SITE_NAME);
+        $mail->addAddress($to);                               // Add a recipient
+
+        // Content
+        $mail->isHTML(true);                                  // Set email format to HTML
+        $mail->Subject = $subject;
+        $mail->Body    = $message;
+
+        $mail->send();
+        return true;
+    } catch (Exception $e) {
+        // For debugging
+        // error_log("Message could not be sent. Mailer Error: {$mail->ErrorInfo}");
+        return false;
+    }
 }
 
+// Keep the rest of your send_comment_notification function unchanged
 function send_comment_notification($post_id, $comment_id) {
     global $pdo;
     
