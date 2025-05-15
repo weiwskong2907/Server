@@ -83,7 +83,7 @@ include 'layouts/header.php';
                                     </div>
                                     <div>
                                         <h5 class="mb-1">Email Us</h5>
-                                        <p class="mb-0"><a href="mailto:contact@example.com">contact@example.com</a></p>
+                                        <p class="mb-0"><a href="mailto:unknowsuser050@gmail.com">unknowsuser050@gmail.com</a></p>
                                     </div>
                                 </div>
                                 <div class="d-flex mb-3">
@@ -94,21 +94,7 @@ include 'layouts/header.php';
                                         <h5 class="mb-1">Response Time</h5>
                                         <p class="mb-0">We typically respond within 24-48 hours</p>
                                     </div>
-                                </div>
-                                <div class="d-flex">
-                                    <div class="flex-shrink-0 me-3">
-                                        <i class="fas fa-globe fa-2x text-primary"></i>
-                                    </div>
-                                    <div>
-                                        <h5 class="mb-1">Social Media</h5>
-                                        <div class="social-links">
-                                            <a href="#" class="text-primary me-2" title="Facebook"><i class="fab fa-facebook-f"></i></a>
-                                            <a href="#" class="text-primary me-2" title="Twitter"><i class="fab fa-twitter"></i></a>
-                                            <a href="#" class="text-primary me-2" title="Instagram"><i class="fab fa-instagram"></i></a>
-                                            <a href="#" class="text-primary" title="GitHub"><i class="fab fa-github"></i></a>
-                                        </div>
-                                    </div>
-                                </div>
+                                </div>                  
                             </div>
                         </div>
                         <div class="col-md-6">

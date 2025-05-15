@@ -98,7 +98,7 @@ include 'layouts/header.php';
                         <div class="card bg-light">
                             <div class="card-body">
                                 <p class="mb-1"><strong><?php echo SITE_NAME; ?></strong></p>
-                                <p class="mb-1">Email: <a href="mailto:privacy@example.com">privacy@example.com</a></p>
+                                <p class="mb-1">Email: <a href="mailto:unknowsuser050@gmail.com">unknowsuser050@gmail.com</a></p>
                                 <p class="mb-0">Or visit our <a href="contact.php">Contact Us</a> page.</p>
                             </div>
                         </div>

@@ -46,14 +46,6 @@
                     </li>
                 </ul>
                 
-                <!-- Search Form -->
-                <form class="d-flex me-2 my-2 my-lg-0" action="index.php" method="GET">
-                    <div class="input-group">
-                        <input class="form-control" type="search" name="search" placeholder="Search posts..." aria-label="Search" value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
-                        <button class="btn btn-outline-light" type="submit"><i class="fas fa-search"></i></button>
-                    </div>
-                </form>
-                
                 <ul class="navbar-nav ms-auto">
                     <?php if (isset($_SESSION['user_id'])): ?>
                         <li class="nav-item dropdown">
