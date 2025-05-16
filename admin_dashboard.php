@@ -13,14 +13,7 @@ $stmt = $pdo->prepare("SELECT is_admin FROM users WHERE id = ?");
 $stmt->execute([$_SESSION['user_id']]);
 $user = $stmt->fetch();
 
-// In admin_users.php - Only full admins can access
-if (!isset($user['admin_level']) || $user['admin_level'] < 2) {
-    header("Location: ./index.php");
-    exit();
-}
-
-// In admin_posts.php and admin_comments.php - Subadmins can access
-if (!isset($user['admin_level']) || $user['admin_level'] < 1) {
+if (!$user['is_admin']) {
     header("Location: ./index.php");
     exit();
 }
