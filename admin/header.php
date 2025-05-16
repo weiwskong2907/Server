@@ -68,6 +68,13 @@
             font-size: 0.75rem;
             border-radius: 50%;
         }
+        
+        /* Dark Mode Styles */
+        .dark-mode { background-color: #222; color: #f8f9fa; }
+        .dark-mode .card { background-color: #333; color: #f8f9fa; }
+        .dark-mode .table { color: #f8f9fa; }
+        .dark-mode .admin-sidebar { background-color: #111; }
+        .dark-mode .admin-header { background-color: #111; }
     </style>
     <!-- Favicon -->
     <link rel="shortcut icon" href="../assets/images/favicon.ico" type="image/x-icon">
@@ -149,33 +156,6 @@
                 <!-- Notification container for JavaScript alerts -->
                 <div id="notification-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1050"></div>
 
-<!-- Add this to the navbar, before the user dropdown -->
-<li class="nav-item">
-    <button class="btn nav-link" id="darkModeToggle">
-        <i class="fas fa-moon"></i>
-    </button>
-</li>
-
-<!-- Add this to the <style> section -->
-.dark-mode {
-    background-color: #222;
-    color: #f8f9fa;
-}
-.dark-mode .card {
-    background-color: #333;
-    color: #f8f9fa;
-}
-.dark-mode .table {
-    color: #f8f9fa;
-}
-.dark-mode .admin-sidebar {
-    background-color: #111;
-}
-.dark-mode .admin-header {
-    background-color: #111;
-}
-
-<!-- Add this JavaScript before the closing </body> tag -->
 <script>
 $(document).ready(function() {
     // Check for saved theme preference or respect OS preference
@@ -210,3 +190,29 @@ $(document).ready(function() {
     }
 });
 </script>
+<!-- Add this to the navbar, before the user dropdown -->
+<li class="nav-item">
+    <button class="btn nav-link" id="darkModeToggle">
+        <i class="fas fa-moon"></i>
+    </button>
+</li>
+
+<!-- Add this to the <style> section -->
+.dark-mode {
+    background-color: #222;
+    color: #f8f9fa;
+}
+.dark-mode .card {
+    background-color: #333;
+    color: #f8f9fa;
+}
+.dark-mode .table {
+    color: #f8f9fa;
+}
+.dark-mode .admin-sidebar {
+    background-color: #111;
+}
+.dark-mode .admin-header {
+    background-color: #111;
+}
+</body>
