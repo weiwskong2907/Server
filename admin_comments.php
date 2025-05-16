@@ -264,4 +264,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<?php include './layouts/footer.php'; ?>
+<?php include './admin/footer.php'; ?>

@@ -31,7 +31,7 @@ $recent_users = $pdo->query("SELECT * FROM users ORDER BY created_at DESC LIMIT 
 $recent_posts = $pdo->query("SELECT posts.*, users.username FROM posts JOIN users ON posts.user_id = users.id ORDER BY created_at DESC LIMIT 5")->fetchAll();
 $recent_comments = $pdo->query("SELECT comments.*, users.username, posts.title as post_title FROM comments JOIN users ON comments.user_id = users.id JOIN posts ON comments.post_id = posts.id ORDER BY comments.created_at DESC LIMIT 5")->fetchAll();
 
-include './layouts/header.php';
+include './admin/header.php';
 ?>
 
 <div class="container mt-4">
@@ -260,4 +260,4 @@ include './layouts/header.php';
     </div>
 </div>
 
-<?php include './layouts/footer.php'; ?>
+<?php include './admin/footer.php'; ?>

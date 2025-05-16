@@ -59,7 +59,7 @@ $users = $pdo->query(
      ORDER BY username ASC"
 )->fetchAll();
 
-include './layouts/header.php';
+include './admin/header.php';
 ?>
 
 <div class="container mt-4">
@@ -183,4 +183,4 @@ include './layouts/header.php';
     </div>
 </div>
 
-<?php include './layouts/footer.php'; ?>
+<?php include './admin/footer.php'; ?>

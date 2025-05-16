@@ -58,7 +58,7 @@ $users = $pdo->query(
      ORDER BY created_at DESC"
 )->fetchAll();
 
-include './layouts/header.php';
+include './admin/header.php';
 ?>
 
 <div class="container mt-4">
@@ -198,4 +198,4 @@ if (isset($_GET['action']) && $_GET['action'] == 'new') {
     </div>
 </div>
 <?php endif; 
-include './layouts/footer.php'; ?>
+include './admin/footer.php'; ?>

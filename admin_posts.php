@@ -83,7 +83,7 @@ $posts = $pdo->query(
      ORDER BY created_at DESC"
 )->fetchAll();
 
-include './layouts/header.php';
+include './admin/header.php';
 ?>
 
 <div class="container mt-4">
@@ -129,4 +129,4 @@ include './layouts/header.php';
     </div>
 </div>
 
-<?php include './layouts/footer.php'; ?>
+<?php include './admin/footer.php'; ?>
