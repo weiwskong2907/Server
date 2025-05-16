@@ -48,7 +48,7 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark admin-header">
         <div class="container-fluid">
-            <a class="navbar-brand d-flex align-items-center" href="index.php">
+            <a class="navbar-brand d-flex align-items-center" href="admin_dashboard.php">
                 <i class="fas fa-cog me-2"></i>
                 <span><?php echo defined('SITE_NAME') ? SITE_NAME : 'My Site'; ?> Admin</span>
             </a>
@@ -66,7 +66,7 @@
                             <?php echo htmlspecialchars($_SESSION['username']); ?>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="profile.php"><i class="fas fa-id-card me-2"></i> Admin Profile</a></li>
+                            <li><a class="dropdown-item" href="./admin/profile.php"><i class="fas fa-id-card me-2"></i> Admin Profile</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="../logout.php"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
                         </ul>
