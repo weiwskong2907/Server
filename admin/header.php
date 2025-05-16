@@ -41,6 +41,33 @@
             background-color: #2c3e50;
             color: white;
         }
+        .dashboard-card {
+            transition: all 0.3s ease;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+        .stat-icon {
+            font-size: 2.5rem;
+            opacity: 0.8;
+        }
+        .table-hover tbody tr:hover {
+            background-color: rgba(0,0,0,0.03);
+        }
+        .admin-sidebar .nav-link {
+            transition: all 0.2s ease;
+        }
+        .notification-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            border-radius: 50%;
+        }
     </style>
     <!-- Favicon -->
     <link rel="shortcut icon" href="../assets/images/favicon.ico" type="image/x-icon">
@@ -97,6 +124,12 @@
                                 <i class="fas fa-file-alt"></i> Posts
                             </a>
                         </li>
+                        <!-- Add this after the Posts nav item (around line 95) -->
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'admin_categories.php' ? 'active' : ''; ?>" href="admin_categories.php">
+                                <i class="fas fa-folder"></i> Categories
+                            </a>
+                        </li>
                         <li class="nav-item">
                             <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'admin_comments.php' ? 'active' : ''; ?>" href="admin_comments.php">
                                 <i class="fas fa-comments"></i> Comments
@@ -115,3 +148,65 @@
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 admin-content">
                 <!-- Notification container for JavaScript alerts -->
                 <div id="notification-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1050"></div>
+
+<!-- Add this to the navbar, before the user dropdown -->
+<li class="nav-item">
+    <button class="btn nav-link" id="darkModeToggle">
+        <i class="fas fa-moon"></i>
+    </button>
+</li>
+
+<!-- Add this to the <style> section -->
+.dark-mode {
+    background-color: #222;
+    color: #f8f9fa;
+}
+.dark-mode .card {
+    background-color: #333;
+    color: #f8f9fa;
+}
+.dark-mode .table {
+    color: #f8f9fa;
+}
+.dark-mode .admin-sidebar {
+    background-color: #111;
+}
+.dark-mode .admin-header {
+    background-color: #111;
+}
+
+<!-- Add this JavaScript before the closing </body> tag -->
+<script>
+$(document).ready(function() {
+    // Check for saved theme preference or respect OS preference
+    const darkMode = localStorage.getItem('darkMode') === 'enabled' || 
+                    (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches && 
+                    localStorage.getItem('darkMode') !== 'disabled');
+    
+    // Set initial theme
+    if (darkMode) {
+        enableDarkMode();
+    }
+    
+    // Dark mode toggle
+    $('#darkModeToggle').click(function() {
+        if ($('body').hasClass('dark-mode')) {
+            disableDarkMode();
+        } else {
+            enableDarkMode();
+        }
+    });
+    
+    function enableDarkMode() {
+        $('body').addClass('dark-mode');
+        $('#darkModeToggle i').removeClass('fa-moon').addClass('fa-sun');
+        localStorage.setItem('darkMode', 'enabled');
+    }
+    
+    function disableDarkMode() {
+        $('body').removeClass('dark-mode');
+        $('#darkModeToggle i').removeClass('fa-sun').addClass('fa-moon');
+        localStorage.setItem('darkMode', 'disabled');
+    }
+});
+</script>

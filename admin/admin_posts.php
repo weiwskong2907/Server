@@ -129,4 +129,83 @@ include 'header.php';
     </div>
 </div>
 
+<!-- Add this after the search form and before the posts table -->
+<div class="row mb-3">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <form id="bulkActionForm" method="POST">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-auto">
+                            <select class="form-select" name="bulk_action" id="bulkAction">
+                                <option value="">Bulk Actions</option>
+                                <option value="feature">Feature Selected</option>
+                                <option value="unfeature">Unfeature Selected</option>
+                                <option value="delete">Delete Selected</option>
+                            </select>
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-primary" id="applyBulkAction" disabled>Apply</button>
+                        </div>
+                        <div class="col-auto ms-auto">
+                            <span class="text-muted"><span id="selectedCount">0</span> items selected</span>
+                        </div>
+                    </div>
+                    <input type="hidden" name="action" value="bulk">
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add this to the table header row, as the first column -->
+<th width="40">
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="selectAll">
+    </div>
+</th>
+
+<!-- Add this to each post row, as the first column -->
+<td>
+    <div class="form-check">
+        <input class="form-check-input post-checkbox" type="checkbox" name="post_ids[]" value="<?php echo $post['id']; ?>" form="bulkActionForm">
+    </div>
+</td>
+
+<!-- Add this JavaScript before the closing </body> tag -->
+<script>
+$(document).ready(function() {
+    // Select all checkbox functionality
+    $('#selectAll').change(function() {
+        $('.post-checkbox').prop('checked', $(this).prop('checked'));
+        updateSelectedCount();
+    });
+    
+    // Update selected count when individual checkboxes change
+    $('.post-checkbox').change(function() {
+        updateSelectedCount();
+    });
+    
+    // Update the selected count and enable/disable the apply button
+    function updateSelectedCount() {
+        const count = $('.post-checkbox:checked').length;
+        $('#selectedCount').text(count);
+        $('#applyBulkAction').prop('disabled', count === 0 || $('#bulkAction').val() === '');
+    }
+    
+    // Enable/disable apply button based on selection
+    $('#bulkAction').change(function() {
+        $('#applyBulkAction').prop('disabled', $(this).val() === '' || $('.post-checkbox:checked').length === 0);
+    });
+    
+    // Confirm before submitting delete action
+    $('#bulkActionForm').submit(function(e) {
+        if ($('#bulkAction').val() === 'delete') {
+            if (!confirm('Are you sure you want to delete the selected posts? This action cannot be undone.')) {
+                e.preventDefault();
+            }
+        }
+    });
+});
+</script>
 <?php include 'footer.php';?>

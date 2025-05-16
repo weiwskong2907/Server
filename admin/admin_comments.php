@@ -254,6 +254,53 @@ include 'header.php';
     </div>
 </div>
 
+<!-- Add this after the comment moderation buttons -->
+<button type="button" class="btn btn-sm btn-info quick-reply" data-comment-id="<?php echo $comment['id']; ?>" data-post-id="<?php echo $comment['post_id']; ?>" data-username="<?php echo htmlspecialchars($comment['username']); ?>">Quick Reply</button>
+
+<!-- Add this modal at the end of the file -->
+<div class="modal fade" id="quickReplyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reply to Comment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="../add_comment.php">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Replying to <span id="replyToUsername"></span></label>
+                        <textarea class="form-control" name="content" rows="4" required></textarea>
+                    </div>
+                    <input type="hidden" name="post_id" id="replyPostId">
+                    <input type="hidden" name="parent_id" id="replyCommentId">
+                    <input type="hidden" name="redirect" value="admin_comments.php">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Post Reply</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add this JavaScript before the closing </body> tag -->
+<script>
+$(document).ready(function() {
+    $('.quick-reply').click(function() {
+        const commentId = $(this).data('comment-id');
+        const postId = $(this).data('post-id');
+        const username = $(this).data('username');
+        
+        $('#replyCommentId').val(commentId);
+        $('#replyPostId').val(postId);
+        $('#replyToUsername').text(username);
+        
+        $('#quickReplyModal').modal('show');
+    });
+});
+</script>
+
 <script>
 // Initialize tooltips
 document.addEventListener('DOMContentLoaded', function() {

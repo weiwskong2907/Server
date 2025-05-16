@@ -230,4 +230,61 @@ include 'header.php';
     </div>
 </div>
 
+<!-- Add this JavaScript before the closing </body> tag -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Initialize drag and drop for categories
+    const categoriesList = document.querySelector('.categories-list');
+    if (categoriesList) {
+        new Sortable(categoriesList, {
+            animation: 150,
+            ghostClass: 'bg-light',
+            handle: '.drag-handle',
+            onEnd: function(evt) {
+                // Get the new order
+                const items = evt.to.querySelectorAll('[data-category-id]');
+                const orderData = [];
+                
+                items.forEach((item, index) => {
+                    orderData.push({
+                        id: item.dataset.categoryId,
+                        position: index + 1
+                    });
+                });
+                
+                // Save the new order via AJAX
+                $.ajax({
+                    url: 'admin_categories.php',
+                    type: 'POST',
+                    data: {
+                        action: 'reorder',
+                        order: JSON.stringify(orderData)
+                    },
+                    success: function(response) {
+                        // Show success message
+                        const toast = `<div class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                            <div class="d-flex">
+                                <div class="toast-body">
+                                    Categories order updated successfully.
+                                </div>
+                                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                            </div>
+                        </div>`;
+                        
+                        $('.toast-container').append(toast);
+                        $('.toast').toast('show');
+                    },
+                    error: function() {
+                        alert('Error updating category order');
+                    }
+                });
+            }
+        });
+    }
+});
+</script>
+
+<!-- Add this at the top of the page for toast notifications -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
 <?php include 'footer.php';?>

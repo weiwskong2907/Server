@@ -182,6 +182,94 @@ include 'header.php';
     </div>
 </div>
 
+<!-- Add this after the statistics cards section -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Activity Timeline</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    <?php
+                    // Get recent activities (combine users, posts, comments)
+                    $activities = [];
+                    
+                    foreach ($recent_users as $user) {
+                        $activities[] = [
+                            'type' => 'user',
+                            'icon' => 'fas fa-user-plus',
+                            'color' => 'primary',
+                            'text' => "New user registered: <strong>" . htmlspecialchars($user['username']) . "</strong>",
+                            'date' => $user['created_at']
+                        ];
+                    }
+                    
+                    foreach ($recent_posts as $post) {
+                        $activities[] = [
+                            'type' => 'post',
+                            'icon' => 'fas fa-file-alt',
+                            'color' => 'success',
+                            'text' => "New post created: <strong>" . htmlspecialchars($post['title']) . "</strong> by " . htmlspecialchars($post['username']),
+                            'date' => $post['created_at']
+                        ];
+                    }
+                    
+                    foreach ($recent_comments as $comment) {
+                        $activities[] = [
+                            'type' => 'comment',
+                            'icon' => 'fas fa-comment',
+                            'color' => 'info',
+                            'text' => "New comment on <strong>" . htmlspecialchars($comment['post_title']) . "</strong> by " . htmlspecialchars($comment['username']),
+                            'date' => $comment['created_at']
+                        ];
+                    }
+                    
+                    // Sort by date (newest first)
+                    usort($activities, function($a, $b) {
+                        return strtotime($b['date']) - strtotime($a['date']);
+                    });
+                    
+                    // Display the 10 most recent activities
+                    $activities = array_slice($activities, 0, 10);
+                    
+                    foreach ($activities as $activity) {
+                        echo '<div class="list-group-item list-group-item-action">';
+                        echo '<div class="d-flex w-100 justify-content-between align-items-center">';
+                        echo '<div><span class="badge bg-' . $activity['color'] . ' me-2"><i class="' . $activity['icon'] . '"></i></span> ' . $activity['text'] . '</div>';
+                        echo '<small class="text-muted">' . time_elapsed_string($activity['date']) . '</small>';
+                        echo '</div></div>';
+                    }
+                    
+                    // Helper function for time ago format
+                    function time_elapsed_string($datetime) {
+                        $now = new DateTime;
+                        $ago = new DateTime($datetime);
+                        $diff = $now->diff($ago);
+                        
+                        if ($diff->d == 0) {
+                            if ($diff->h == 0) {
+                                if ($diff->i == 0) {
+                                    return "just now";
+                                } else {
+                                    return $diff->i . " minute" . ($diff->i > 1 ? "s" : "") . " ago";
+                                }
+                            } else {
+                                return $diff->h . " hour" . ($diff->h > 1 ? "s" : "") . " ago";
+                            }
+                        } else if ($diff->d < 7) {
+                            return $diff->d . " day" . ($diff->d > 1 ? "s" : "") . " ago";
+                        } else {
+                            return date('M j, Y', strtotime($datetime));
+                        }
+                    }
+                    ?>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- After Statistics Cards section -->
 <div class="row mb-4">
     <div class="col-md-12">

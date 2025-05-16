@@ -199,3 +199,103 @@ if (isset($_GET['action']) && $_GET['action'] == 'new') {
 </div>
 <?php endif; 
 include 'footer.php';?>
+
+<!-- Add this before the closing </div> tag at the end of the file -->
+<!-- User Details Modal -->
+<div class="modal fade" id="userDetailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">User Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4" id="userProfileSection">
+                    <!-- Profile picture will be inserted here via JavaScript -->
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" class="form-control" id="modalUsername" readonly>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" id="modalEmail" readonly>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Joined Date</label>
+                        <input type="text" class="form-control" id="modalJoined" readonly>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Last Login</label>
+                        <input type="text" class="form-control" id="modalLastLogin" readonly>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-4 text-center">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h3 class="display-4" id="modalPostCount">0</h3>
+                                <p class="text-muted">Posts</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h3 class="display-4" id="modalCommentCount">0</h3>
+                                <p class="text-muted">Comments</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h3 class="display-4" id="modalStatus"></h3>
+                                <p class="text-muted">Status</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="#" class="btn btn-primary" id="viewUserPosts">View Posts</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add this JavaScript before the closing </body> tag -->
+<script>
+$(document).ready(function() {
+    $('.view-user-details').click(function() {
+        const userId = $(this).data('user-id');
+        const username = $(this).data('username');
+        const email = $(this).data('email');
+        const joined = $(this).data('joined');
+        const postCount = $(this).data('post-count');
+        const commentCount = $(this).data('comment-count');
+        const isAdmin = $(this).data('is-admin');
+        
+        $('#modalUsername').val(username);
+        $('#modalEmail').val(email);
+        $('#modalJoined').val(joined);
+        $('#modalPostCount').text(postCount);
+        $('#modalCommentCount').text(commentCount);
+        $('#modalStatus').html(isAdmin ? '<span class="text-success">Admin</span>' : '<span class="text-primary">User</span>');
+        
+        // Set profile picture or default icon
+        const profilePic = $(this).data('profile-pic');
+        if (profilePic) {
+            $('#userProfileSection').html(`<img src="${profilePic}" class="rounded-circle img-thumbnail" style="width: 150px; height: 150px; object-fit: cover;">`);
+        } else {
+            $('#userProfileSection').html(`<div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center mx-auto" style="width: 150px; height: 150px;"><i class="fas fa-user fa-5x text-white"></i></div>`);
+        }
+        
+        $('#viewUserPosts').attr('href', `admin_posts.php?user_id=${userId}`);
+        
+        $('#userDetailsModal').modal('show');
+    });
+});
+</script>
