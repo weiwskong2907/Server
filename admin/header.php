@@ -190,7 +190,6 @@ $(document).ready(function() {
     }
 });
 </script>
-<!-- Add this to the navbar, before the user dropdown -->
 <li class="nav-item">
     <button class="btn nav-link" id="darkModeToggle">
         <i class="fas fa-moon"></i>
