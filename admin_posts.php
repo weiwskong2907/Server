@@ -87,83 +87,43 @@ include './layouts/header.php';
 ?>
 
 <div class="container mt-4">
+    <!-- Add after the header section -->
     <div class="row mb-4">
-        <div class="col-md-12 d-flex justify-content-between align-items-center">
-            <div>
-                <h2><i class="fas fa-file-alt me-2"></i>Post Management</h2>
-                <p class="text-muted">Manage all posts on your site</p>
-            </div>
-            <a href="admin_dashboard.php" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
-            </a>
-        </div>
-        
-        <?php if (isset($message)): ?>
-            <?php foreach ($message as $type => $text): ?>
-                <div class="alert alert-<?php echo $type; ?> alert-dismissible fade show" role="alert">
-                    <?php echo $text; ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="search" class="form-label">Search Posts</label>
+                            <input type="text" class="form-control" id="search" name="search" placeholder="Post title" value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="category" class="form-label">Category</label>
+                            <select class="form-select" id="category" name="category">
+                                <option value="">All Categories</option>
+                                <?php
+                                $categories = $pdo->query("SELECT * FROM categories ORDER BY name")->fetchAll();
+                                foreach ($categories as $category) {
+                                    $selected = isset($_GET['category']) && $_GET['category'] == $category['id'] ? 'selected' : '';
+                                    echo "<option value=\"{$category['id']}\" {$selected}>{$category['name']}</option>";
+                                }
+                                ?>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="sort" class="form-label">Sort By</label>
+                            <select class="form-select" id="sort" name="sort">
+                                <option value="newest" <?php echo (!isset($_GET['sort']) || $_GET['sort'] == 'newest') ? 'selected' : ''; ?>>Newest First</option>
+                                <option value="oldest" <?php echo isset($_GET['sort']) && $_GET['sort'] == 'oldest' ? 'selected' : ''; ?>>Oldest First</option>
+                                <option value="title" <?php echo isset($_GET['sort']) && $_GET['sort'] == 'title' ? 'selected' : ''; ?>>Title</option>
+                                <option value="comments" <?php echo isset($_GET['sort']) && $_GET['sort'] == 'comments' ? 'selected' : ''; ?>>Most Comments</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">Filter</button>
+                        </div>
+                    </form>
                 </div>
-            <?php endforeach; ?>
-        <?php endif; ?>
-    </div>
-    
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>ID</th>
-                            <th>Title</th>
-                            <th>Author</th>
-                            <th>Created</th>
-                            <th>Comments</th>
-                            <th>Attachments</th>
-                            <th>Featured</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach($posts as $post): ?>
-                            <tr>
-                                <td><?php echo $post['id']; ?></td>
-                                <td>
-                                    <a href="post.php?id=<?php echo $post['id']; ?>" target="_blank">
-                                        <?php echo htmlspecialchars($post['title']); ?>
-                                    </a>
-                                </td>
-                                <td><?php echo htmlspecialchars($post['username']); ?></td>
-                                <td><?php echo date('Y-m-d', strtotime($post['created_at'])); ?></td>
-                                <td><span class="badge bg-secondary"><?php echo $post['comment_count']; ?></span></td>
-                                <td><span class="badge bg-secondary"><?php echo $post['attachment_count']; ?></span></td>
-                                <td>
-                                    <form method="POST" style="display: inline;">
-                                        <input type="hidden" name="action" value="feature">
-                                        <input type="hidden" name="post_id" value="<?php echo $post['id']; ?>">
-                                        <button type="submit" class="btn btn-sm <?php echo isset($post['is_featured']) && $post['is_featured'] ? 'btn-warning' : 'btn-outline-secondary'; ?>">
-                                            <i class="fas fa-star"></i>
-                                        </button>
-                                    </form>
-                                </td>
-                                <td>
-                                    <div class="btn-group">
-                                        <a href="post.php?id=<?php echo $post['id']; ?>" class="btn btn-sm btn-info" target="_blank">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <form method="POST" style="display: inline;">
-                                            <input type="hidden" name="action" value="delete">
-                                            <input type="hidden" name="post_id" value="<?php echo $post['id']; ?>">
-                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this post? This will also delete all comments and attachments.');">                                            
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
             </div>
         </div>
     </div>

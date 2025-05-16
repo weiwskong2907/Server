@@ -164,4 +164,82 @@ include './layouts/header.php';
     </div>
 </div>
 
+<!-- After Statistics Cards section -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-server me-2"></i>System Overview</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <div class="border rounded p-3 text-center">
+                            <h6>PHP Version</h6>
+                            <p class="mb-0 fw-bold"><?php echo phpversion(); ?></p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="border rounded p-3 text-center">
+                            <h6>Database</h6>
+                            <p class="mb-0 fw-bold"><?php echo $pdo->getAttribute(PDO::ATTR_SERVER_VERSION); ?></p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="border rounded p-3 text-center">
+                            <h6>Server</h6>
+                            <p class="mb-0 fw-bold"><?php echo $_SERVER['SERVER_SOFTWARE']; ?></p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="border rounded p-3 text-center">
+                            <h6>Disk Space</h6>
+                            <p class="mb-0 fw-bold"><?php echo round(disk_free_space("/") / 1073741824, 2); ?> GB Free</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- After System Overview section -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <a href="admin_users.php?action=new" class="btn btn-outline-primary w-100 p-3">
+                            <i class="fas fa-user-plus mb-2 d-block" style="font-size: 24px;"></i>
+                            Add New User
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="admin_posts.php?action=new" class="btn btn-outline-success w-100 p-3">
+                            <i class="fas fa-file-medical mb-2 d-block" style="font-size: 24px;"></i>
+                            Create New Post
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="admin_comments.php?status=pending" class="btn btn-outline-warning w-100 p-3">
+                            <i class="fas fa-comment-dots mb-2 d-block" style="font-size: 24px;"></i>
+                            Moderate Comments
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="admin_categories.php" class="btn btn-outline-info w-100 p-3">
+                            <i class="fas fa-tags mb-2 d-block" style="font-size: 24px;"></i>
+                            Manage Categories
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?php include './layouts/footer.php'; ?>

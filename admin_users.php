@@ -62,97 +62,140 @@ include './layouts/header.php';
 ?>
 
 <div class="container mt-4">
+    <!-- Add after the header section -->
     <div class="row mb-4">
-        <div class="col-md-12 d-flex justify-content-between align-items-center">
-            <div>
-                <h2><i class="fas fa-users me-2"></i>User Management</h2>
-                <p class="text-muted">Manage user accounts and permissions</p>
-            </div>
-            <a href="admin_dashboard.php" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
-            </a>
-        </div>
-        
-        <?php if (isset($message)): ?>
-            <?php foreach ($message as $type => $text): ?>
-                <div class="alert alert-<?php echo $type; ?> alert-dismissible fade show" role="alert">
-                    <?php echo $text; ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="search" class="form-label">Search Users</label>
+                            <input type="text" class="form-control" id="search" name="search" placeholder="Username or email" value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="role" class="form-label">Role</label>
+                            <select class="form-select" id="role" name="role">
+                                <option value="">All Roles</option>
+                                <option value="admin" <?php echo isset($_GET['role']) && $_GET['role'] == 'admin' ? 'selected' : ''; ?>>Admins</option>
+                                <option value="user" <?php echo isset($_GET['role']) && $_GET['role'] == 'user' ? 'selected' : ''; ?>>Regular Users</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="sort" class="form-label">Sort By</label>
+                            <select class="form-select" id="sort" name="sort">
+                                <option value="newest" <?php echo (!isset($_GET['sort']) || $_GET['sort'] == 'newest') ? 'selected' : ''; ?>>Newest First</option>
+                                <option value="oldest" <?php echo isset($_GET['sort']) && $_GET['sort'] == 'oldest' ? 'selected' : ''; ?>>Oldest First</option>
+                                <option value="username" <?php echo isset($_GET['sort']) && $_GET['sort'] == 'username' ? 'selected' : ''; ?>>Username</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">Filter</button>
+                        </div>
+                    </form>
                 </div>
-            <?php endforeach; ?>
-        <?php endif; ?>
-    </div>
-    
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>ID</th>
-                            <th>Username</th>
-                            <th>Email</th>
-                            <th>Created</th>
-                            <th>Posts</th>
-                            <th>Comments</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach($users as $u): ?>
-                            <tr>
-                                <td><?php echo $u['id']; ?></td>
-                                <td><?php echo htmlspecialchars($u['username']); ?></td>
-                                <td><?php echo htmlspecialchars($u['email']); ?></td>
-                                <td><?php echo date('Y-m-d', strtotime($u['created_at'])); ?></td>
-                                <td><span class="badge bg-secondary"><?php echo $u['post_count']; ?></span></td>
-                                <td><span class="badge bg-secondary"><?php echo $u['comment_count']; ?></span></td>
-                                <td>
-                                    <?php if ($u['id'] != $_SESSION['user_id']): ?>
-                                        <form method="POST" style="display: inline;">
-                                            <input type="hidden" name="action" value="toggle_admin">
-                                            <input type="hidden" name="user_id" value="<?php echo $u['id']; ?>">
-                                            <button type="submit" class="btn btn-sm <?php echo $u['is_admin'] ? 'btn-success' : 'btn-secondary'; ?>">
-                                                <?php echo $u['is_admin'] ? 'Admin' : 'User'; ?>
-                                            </button>
-                                        </form>
-                                    <?php else: ?>
-                                        <span class="badge bg-primary">Current User</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <div class="btn-group">
-                                        <a href="profile.php?id=<?php echo $u['id']; ?>" class="btn btn-sm btn-info" target="_blank">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        
-                                        <?php if ($u['id'] != $_SESSION['user_id']): ?>
-                                            <form method="POST" style="display: inline;">
-                                                <input type="hidden" name="action" value="reset_password">
-                                                <input type="hidden" name="user_id" value="<?php echo $u['id']; ?>">
-                                                <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Are you sure you want to reset this user\'s password?');">
-                                                    <i class="fas fa-key"></i>
-                                                </button>
-                                            </form>
-                                            
-                                            <form method="POST" style="display: inline;">
-                                                <input type="hidden" name="action" value="delete">
-                                                <input type="hidden" name="user_id" value="<?php echo $u['id']; ?>">
-                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this user? This action cannot be undone.');">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
-                                        <?php endif; ?>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
             </div>
         </div>
     </div>
 </div>
 
-<?php include './layouts/footer.php'; ?>
+<!-- Add this PHP code near the top of the file -->
+<?php
+// Handle new user creation
+if (isset($_GET['action']) && $_GET['action'] == 'new') {
+    $show_form = true;
+    
+    if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['create_user'])) {
+        $username = trim($_POST['username']);
+        $email = trim($_POST['email']);
+        $password = $_POST['password'];
+        $is_admin = isset($_POST['is_admin']) ? 1 : 0;
+        
+        // Validate input
+        $errors = [];
+        
+        if (empty($username)) {
+            $errors[] = "Username is required";
+        }
+        
+        if (empty($email)) {
+            $errors[] = "Email is required";
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors[] = "Invalid email format";
+        }
+        
+        if (empty($password)) {
+            $errors[] = "Password is required";
+        } elseif (strlen($password) < 8) {
+            $errors[] = "Password must be at least 8 characters";
+        }
+        
+        // Check if username or email already exists
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE username = ? OR email = ?");
+        $stmt->execute([$username, $email]);
+        if ($stmt->fetchColumn() > 0) {
+            $errors[] = "Username or email already exists";
+        }
+        
+        if (empty($errors)) {
+            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+            
+            $stmt = $pdo->prepare("INSERT INTO users (username, email, password, is_admin, created_at) VALUES (?, ?, ?, ?, NOW())");
+            if ($stmt->execute([$username, $email, $hashed_password, $is_admin])) {
+                $message = ["success" => "User created successfully"];
+                $show_form = false;
+            } else {
+                $errors[] = "Error creating user";
+            }
+        }
+    }
+}
+?>
+
+<!-- Add this HTML where you want the form to appear -->
+<?php if (isset($show_form) && $show_form): ?>
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Create New User</h5>
+            </div>
+            <div class="card-body">
+                <?php if (!empty($errors)): ?>
+                    <div class="alert alert-danger">
+                        <ul class="mb-0">
+                            <?php foreach ($errors as $error): ?>
+                                <li><?php echo $error; ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php endif; ?>
+                
+                <form method="POST" action="admin_users.php?action=new">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" value="<?php echo htmlspecialchars($_POST['username'] ?? ''); ?>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                        <div class="form-text">Password must be at least 8 characters long.</div>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="is_admin" name="is_admin" <?php echo isset($_POST['is_admin']) ? 'checked' : ''; ?>>
+                        <label class="form-check-label" for="is_admin">Admin privileges</label>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <a href="admin_users.php" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" name="create_user" class="btn btn-primary">Create User</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; 
+include './layouts/footer.php'; ?>
