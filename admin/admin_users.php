@@ -49,14 +49,69 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-// Get all users with post and comment counts
-$users = $pdo->query(
-    "SELECT users.*, 
+// Ensure all POST request handling (like user creation, deletion) is done before this.
+
+// Get all users with post and comment counts, applying filters
+$base_sql = "SELECT users.*,
             (SELECT COUNT(*) FROM posts WHERE user_id = users.id) as post_count,
             (SELECT COUNT(*) FROM comments WHERE user_id = users.id) as comment_count
-     FROM users 
-     ORDER BY created_at DESC"
-)->fetchAll();
+            FROM users";
+$where_conditions = [];
+$query_params = []; // Use an associative array for named placeholders
+
+// Search filter
+if (!empty($_GET['search'])) {
+    $search_term = '%' . trim($_GET['search']) . '%';
+    // Use OR for multiple fields in search
+    $where_conditions[] = "(users.username LIKE :search_username OR users.email LIKE :search_email)";
+    $query_params[':search_username'] = $search_term;
+    $query_params[':search_email'] = $search_term;
+}
+
+// Role filter (using admin_level)
+if (!empty($_GET['role'])) {
+    $role = $_GET['role'];
+    if ($role == 'admin') {
+        $where_conditions[] = "users.admin_level = :role_admin_level";
+        $query_params[':role_admin_level'] = 2;
+    } elseif ($role == 'subadmin') {
+        $where_conditions[] = "users.admin_level = :role_admin_level";
+        $query_params[':role_admin_level'] = 1;
+    } elseif ($role == 'user') {
+        $where_conditions[] = "users.admin_level = :role_admin_level";
+        $query_params[':role_admin_level'] = 0;
+    }
+    // If 'All Roles' is selected, $_GET['role'] is empty, so no role-specific WHERE clause is added.
+}
+
+$sql_query = $base_sql;
+if (!empty($where_conditions)) {
+    $sql_query .= " WHERE " . implode(" AND ", $where_conditions);
+}
+
+// Sort order
+$sort_by = $_GET['sort_by'] ?? 'newest'; // Default to 'newest'
+$order_by_clause = " ORDER BY ";
+switch ($sort_by) {
+    case 'oldest':
+        $order_by_clause .= "users.created_at ASC";
+        break;
+    case 'username_asc':
+        $order_by_clause .= "users.username ASC";
+        break;
+    case 'username_desc':
+        $order_by_clause .= "users.username DESC";
+        break;
+    case 'newest':
+    default:
+        $order_by_clause .= "users.created_at DESC";
+        break;
+}
+$sql_query .= $order_by_clause;
+
+$stmt = $pdo->prepare($sql_query);
+$stmt->execute($query_params);
+$users = $stmt->fetchAll(PDO::FETCH_ASSOC); // Using FETCH_ASSOC is common
 
 include 'header.php';
 ?>
@@ -136,15 +191,31 @@ if (isset($_GET['action']) && $_GET['action'] == 'new') {
             $errors[] = "Username or email already exists";
         }
         
+        // After validation and $errors check:
         if (empty($errors)) {
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+            // Determine admin_level based on the is_admin checkbox
+            // is_admin comes from: $is_admin = isset($_POST['is_admin']) ? 1 : 0;
+            $admin_level_value = $is_admin ? 2 : 0; // If 'is_admin' is checked, set level to 2 (Admin), else 0 (User)
+        
+            // Ensure your INSERT statement includes admin_level
+            $stmt = $pdo->prepare("INSERT INTO users (username, email, password, is_admin, admin_level) VALUES (:username, :email, :password, :is_admin, :admin_level)");
             
-            $stmt = $pdo->prepare("INSERT INTO users (username, email, password, is_admin, created_at) VALUES (?, ?, ?, ?, NOW())");
-            if ($stmt->execute([$username, $email, $hashed_password, $is_admin])) {
+            if ($stmt->execute([
+                ':username' => $username,
+                ':email' => $email,
+                ':password' => $hashed_password,
+                ':is_admin' => $is_admin,
+                ':admin_level' => $admin_level_value
+            ])) {
                 $message = ["success" => "User created successfully"];
-                $show_form = false;
+                // Consider redirecting here to prevent form resubmission (Post/Redirect/Get pattern)
+                // header("Location: admin_users.php?success=user_created"); exit();
+                // If not redirecting, the $users variable will be re-fetched by the logic above if this POST handling is at the top of the script.
             } else {
                 $errors[] = "Error creating user";
+                // Add detailed error logging here if needed
+                // error_log("PDO Error: " . print_r($stmt->errorInfo(), true));
             }
         }
     }
