@@ -1,7 +1,7 @@
 <?php
-define('DB_HOST', 'localhost');
+define('DB_HOST', 'mysql-db');
 define('DB_USER', 'root');
-define('DB_PASS', '');
+define('DB_PASS', 'myrootpass');
 define('DB_NAME', 'family_forum');
 
 // Site settings
