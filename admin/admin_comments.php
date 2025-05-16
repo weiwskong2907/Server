@@ -91,6 +91,45 @@ $comment_counts = [
 include 'header.php';
 ?>
 
+<!-- Add this CSS in the header.php or inline -->
+<style>
+.comment-content {
+    max-height: 100px;
+    overflow-y: auto;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+}
+
+.comment-meta {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.comment-actions {
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.comment-actions:hover {
+    opacity: 1;
+}
+
+.table > :not(caption) > * > * {
+    vertical-align: middle;
+}
+
+.status-badge {
+    min-width: 80px;
+    text-align: center;
+}
+
+.quick-reply {
+    margin-left: 10px;
+}
+</style>
+
 <div class="container mt-4">
     <div class="row mb-4">
         <div class="col-md-12 d-flex justify-content-between align-items-center">
@@ -141,6 +180,24 @@ include 'header.php';
         </div>
     </div>
     
+    <!-- Add this above the table -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="input-group">
+                <input type="text" class="form-control" id="commentSearch" placeholder="Search comments...">
+                <button class="btn btn-outline-secondary" type="button">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+        <div class="col-md-6 text-end">
+            <select class="form-select d-inline-block w-auto" id="commentSort">
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+            </select>
+        </div>
+    </div>
+
     <!-- Comments Table -->
     <div class="table-responsive">
         <table class="table table-striped table-hover">
@@ -159,15 +216,22 @@ include 'header.php';
                 <?php if (count($comments) > 0): ?>
                     <?php foreach($comments as $comment): ?>
                         <tr>
-                            <td><?php echo $comment['id']; ?></td>
-                            <td>
-                                <a href="post.php?id=<?php echo $comment['post_id']; ?>" target="_blank">
+                            <td width="5%"><?php echo $comment['id']; ?></td>
+                            <td width="15%">
+                                <a href="../post.php?id=<?php echo $comment['post_id']; ?>" target="_blank" class="text-decoration-none">
                                     <?php echo htmlspecialchars(substr($comment['post_title'], 0, 30)) . (strlen($comment['post_title']) > 30 ? '...' : ''); ?>
                                 </a>
                             </td>
-                            <td><?php echo htmlspecialchars($comment['username']); ?></td>
+                            <td width="15%">
+                                <div class="d-flex align-items-center">
+                                    <?php if ($comment['profile_picture']): ?>
+                                        <img src="<?php echo htmlspecialchars($comment['profile_picture']); ?>" class="rounded-circle me-2" width="30">
+                                    <?php endif; ?>
+                                    <?php echo htmlspecialchars($comment['username']); ?>
+                                </div>
+                            </td>
                             <td>
-                                <div style="max-height: 100px; overflow-y: auto;">
+                                <div class="comment-content">
                                     <?php echo nl2br(htmlspecialchars($comment['content'])); ?>
                                 </div>
                             </td>
@@ -236,6 +300,7 @@ include 'header.php';
                                         </li>
                                     </ul>
                                 </div>
+                                <button type="button" class="btn btn-sm btn-info quick-reply" data-comment-id="<?php echo $comment['id']; ?>" data-post-id="<?php echo $comment['post_id']; ?>" data-username="<?php echo htmlspecialchars($comment['username']); ?>">Quick Reply</button>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -253,9 +318,6 @@ include 'header.php';
         </table>
     </div>
 </div>
-
-<!-- Add this after the comment moderation buttons -->
-<button type="button" class="btn btn-sm btn-info quick-reply" data-comment-id="<?php echo $comment['id']; ?>" data-post-id="<?php echo $comment['post_id']; ?>" data-username="<?php echo htmlspecialchars($comment['username']); ?>">Quick Reply</button>
 
 <!-- Add this modal at the end of the file -->
 <div class="modal fade" id="quickReplyModal" tabindex="-1" aria-hidden="true">
@@ -308,6 +370,33 @@ document.addEventListener('DOMContentLoaded', function() {
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl)
     })
+});
+</script>
+
+<!-- Add this JavaScript before the closing </body> tag -->
+<script>
+$(document).ready(function() {
+    // AJAX form submission for comment moderation
+    $('.dropdown-item').click(function(e) {
+        const form = $(this).closest('form');
+        if (form.length) {
+            e.preventDefault();
+            
+            $.post(form.attr('action'), form.serialize(), function(response) {
+                if (response.success) {
+                    location.reload();
+                } else {
+                    alert('Error processing request');
+                }
+            }, 'json');
+        }
+    });
+
+    // Enhance tooltips
+    $('[data-bs-toggle="tooltip"]').tooltip({
+        html: true,
+        placement: 'top'
+    });
 });
 </script>
 
