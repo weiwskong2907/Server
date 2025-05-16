@@ -196,23 +196,4 @@ $(document).ready(function() {
         <i class="fas fa-moon"></i>
     </button>
 </li>
-
-<!-- Add this to the <style> section -->
-.dark-mode {
-    background-color: #222;
-    color: #f8f9fa;
-}
-.dark-mode .card {
-    background-color: #333;
-    color: #f8f9fa;
-}
-.dark-mode .table {
-    color: #f8f9fa;
-}
-.dark-mode .admin-sidebar {
-    background-color: #111;
-}
-.dark-mode .admin-header {
-    background-color: #111;
-}
 </body>
