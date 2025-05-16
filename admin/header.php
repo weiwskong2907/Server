@@ -66,7 +66,7 @@
                             <?php echo htmlspecialchars($_SESSION['username']); ?>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="./admin/profile.php"><i class="fas fa-id-card me-2"></i> Admin Profile</a></li>
+                            <li><a class="dropdown-item" href="profile.php"><i class="fas fa-id-card me-2"></i> Admin Profile</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="../logout.php"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
                         </ul>
