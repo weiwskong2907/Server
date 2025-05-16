@@ -83,27 +83,27 @@
                 <div class="position-sticky pt-3">
                     <ul class="nav flex-column">
                         <li class="nav-item">
-                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'index.php' ? 'active' : ''; ?>" href="index.php">
+                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'admin_dashboard.php' ? 'active' : ''; ?>" href="admin_dashboard.php">
                                 <i class="fas fa-tachometer-alt"></i> Dashboard
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'users.php' ? 'active' : ''; ?>" href="users.php">
+                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'admin_users.php' ? 'active' : ''; ?>" href="admin_users.php">
                                 <i class="fas fa-users"></i> Users
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'posts.php' ? 'active' : ''; ?>" href="posts.php">
+                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'admin_posts.php' ? 'active' : ''; ?>" href="admin_posts.php">
                                 <i class="fas fa-file-alt"></i> Posts
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'comments.php' ? 'active' : ''; ?>" href="comments.php">
+                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'admin_comments.php' ? 'active' : ''; ?>" href="admin_comments.php">
                                 <i class="fas fa-comments"></i> Comments
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'profile.php' ? 'active' : ''; ?>" href="profile.php">
+                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == './admin/profile.php' ? 'active' : ''; ?>" href="./admin/profile.php">
                                 <i class="fas fa-user-cog"></i> Profile
                             </a>
                         </li>
