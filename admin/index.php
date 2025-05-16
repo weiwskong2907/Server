@@ -25,45 +25,59 @@ $stats = [
     'comments' => $pdo->query("SELECT COUNT(*) FROM comments")->fetchColumn(),
 ];
 
-include '../layouts/header.php';
+// Set page title
+$page_title = "Admin Dashboard";
+
+include 'header.php';
 ?>
 
-<div class="container mt-4">
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <h2>Admin Dashboard</h2>
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard</h1>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title">Users</h5>
+                        <h2 class="display-4"><?php echo $stats['users']; ?></h2>
+                    </div>
+                    <i class="fas fa-users fa-3x opacity-50"></i>
+                </div>
+                <a href="users.php" class="btn btn-light mt-3">Manage Users</a>
+            </div>
         </div>
     </div>
-    
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Users</h5>
-                    <p class="card-text display-4"><?php echo $stats['users']; ?></p>
-                    <a href="users.php" class="btn btn-primary">Manage Users</a>
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title">Posts</h5>
+                        <h2 class="display-4"><?php echo $stats['posts']; ?></h2>
+                    </div>
+                    <i class="fas fa-file-alt fa-3x opacity-50"></i>
                 </div>
+                <a href="posts.php" class="btn btn-light mt-3">Manage Posts</a>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Posts</h5>
-                    <p class="card-text display-4"><?php echo $stats['posts']; ?></p>
-                    <a href="posts.php" class="btn btn-primary">Manage Posts</a>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title">Comments</h5>
+                        <h2 class="display-4"><?php echo $stats['comments']; ?></h2>
+                    </div>
+                    <i class="fas fa-comments fa-3x opacity-50"></i>
                 </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Comments</h5>
-                    <p class="card-text display-4"><?php echo $stats['comments']; ?></p>
-                    <a href="comments.php" class="btn btn-primary">Manage Comments</a>
-                </div>
+                <a href="comments.php" class="btn btn-light mt-3">Manage Comments</a>
             </div>
         </div>
     </div>
 </div>
 
-<?php include '../layouts/footer.php'; ?>
+<?php include 'footer.php'; ?>
