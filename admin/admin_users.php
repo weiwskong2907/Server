@@ -1,7 +1,7 @@
 <?php
-require_once './includes/config.php';
-require_once './includes/db.php';
-require_once './includes/functions.php';
+require_once '../includes/config.php';
+require_once '../includes/db.php';
+require_once '../includes/functions.php';
 
 // Check if user is admin
 if (!isset($_SESSION['user_id'])) {
@@ -58,7 +58,7 @@ $users = $pdo->query(
      ORDER BY created_at DESC"
 )->fetchAll();
 
-include './admin/header.php';
+include 'header.php';
 ?>
 
 <div class="container mt-4">
@@ -198,4 +198,4 @@ if (isset($_GET['action']) && $_GET['action'] == 'new') {
     </div>
 </div>
 <?php endif; 
-include './admin/footer.php'; ?>
+include 'footer.php';?>

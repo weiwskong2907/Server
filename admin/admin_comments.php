@@ -1,8 +1,8 @@
 <?php
-require_once './includes/config.php';
-require_once './includes/db.php';
-require_once './includes/functions.php';
-require_once './includes/email.php';
+require_once '../includes/config.php';
+require_once '../includes/db.php';
+require_once '../includes/functions.php';
+require_once '../includes/email.php';
 
 // Check if user is admin
 if (!isset($_SESSION['user_id'])) {
@@ -88,7 +88,7 @@ $comment_counts = [
     'spam' => $pdo->query("SELECT COUNT(*) FROM comments WHERE status = 'spam'")->fetchColumn(),
 ];
 
-include './layouts/header.php';
+include 'header.php';
 ?>
 
 <div class="container mt-4">
