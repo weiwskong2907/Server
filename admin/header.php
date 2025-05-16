@@ -103,7 +103,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == './admin/profile.php' ? 'active' : ''; ?>" href="./admin/profile.php">
+                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'profile.php' ? 'active' : ''; ?>" href="profile.php">
                                 <i class="fas fa-user-cog"></i> Profile
                             </a>
                         </li>
