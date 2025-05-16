@@ -23,6 +23,7 @@ $stats = [
     'users' => $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn(),
     'posts' => $pdo->query("SELECT COUNT(*) FROM posts")->fetchColumn(),
     'comments' => $pdo->query("SELECT COUNT(*) FROM comments")->fetchColumn(),
+    'categories' => $pdo->query("SELECT COUNT(*) FROM categories")->fetchColumn(),
 ];
 
 // Get recent activity
@@ -43,45 +44,62 @@ include './layouts/header.php';
     
     <!-- Statistics Cards -->
     <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card bg-primary text-white mb-3">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5 class="card-title">Users</h5>
-                            <p class="card-text display-4"><?php echo $stats['users']; ?></p>
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">  <!-- Changed from col-md-4 to col-md-3 to fit 4 cards -->
+                <div class="card bg-primary text-white mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-title">Users</h5>
+                                <p class="card-text display-4"><?php echo $stats['users']; ?></p>
+                            </div>
+                            <i class="fas fa-users fa-3x opacity-50"></i>
                         </div>
-                        <i class="fas fa-users fa-3x opacity-50"></i>
+                        <a href="admin_users.php" class="btn btn-outline-light mt-2">Manage Users</a>
                     </div>
-                    <a href="admin_users.php" class="btn btn-outline-light mt-2">Manage Users</a>
                 </div>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card bg-success text-white mb-3">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5 class="card-title">Posts</h5>
-                            <p class="card-text display-4"><?php echo $stats['posts']; ?></p>
+            <div class="col-md-3">  <!-- Changed from col-md-4 to col-md-3 -->
+                <div class="card bg-success text-white mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-title">Posts</h5>
+                                <p class="card-text display-4"><?php echo $stats['posts']; ?></p>
+                            </div>
+                            <i class="fas fa-file-alt fa-3x opacity-50"></i>
                         </div>
-                        <i class="fas fa-file-alt fa-3x opacity-50"></i>
+                        <a href="admin_posts.php" class="btn btn-outline-light mt-2">Manage Posts</a>
                     </div>
-                    <a href="admin_posts.php" class="btn btn-outline-light mt-2">Manage Posts</a>
                 </div>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card bg-info text-white mb-3">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5 class="card-title">Comments</h5>
-                            <p class="card-text display-4"><?php echo $stats['comments']; ?></p>
+            <div class="col-md-3">  <!-- Changed from col-md-4 to col-md-3 -->
+                <div class="card bg-info text-white mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-title">Comments</h5>
+                                <p class="card-text display-4"><?php echo $stats['comments']; ?></p>
+                            </div>
+                            <i class="fas fa-comments fa-3x opacity-50"></i>
                         </div>
-                        <i class="fas fa-comments fa-3x opacity-50"></i>
+                        <a href="admin_comments.php" class="btn btn-outline-light mt-2">Manage Comments</a>
                     </div>
-                    <a href="admin_comments.php" class="btn btn-outline-light mt-2">Manage Comments</a>
+                </div>
+            </div>
+            <div class="col-md-3">  <!-- New card for categories -->
+                <div class="card bg-warning text-white mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-title">Categories</h5>
+                                <p class="card-text display-4"><?php echo $stats['categories']; ?></p>
+                            </div>
+                            <i class="fas fa-folder fa-3x opacity-50"></i>
+                        </div>
+                        <a href="admin_categories.php" class="btn btn-outline-light mt-2">Manage Categories</a>
+                    </div>
                 </div>
             </div>
         </div>
