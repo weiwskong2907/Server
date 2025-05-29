@@ -9,6 +9,10 @@
 
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- Custom JavaScript -->
     <script>
@@ -19,19 +23,24 @@
         })
         
         // Back to top button
-        var backToTopButton = document.getElementById("back-to-top");
-        
-        window.onscroll = function() {
-            if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
-                backToTopButton.style.display = "block";
+        $(window).scroll(function() {
+            if ($(this).scrollTop() > 300) {
+                $('#back-to-top').fadeIn();
             } else {
-                backToTopButton.style.display = "none";
+                $('#back-to-top').fadeOut();
             }
-        };
+        });
         
-        backToTopButton.addEventListener("click", function() {
-            document.body.scrollTop = 0; // For Safari
-            document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+        $('#back-to-top').click(function(e) {
+            e.preventDefault();
+            $('html, body').animate({scrollTop: 0}, 'slow');
+        });
+        
+        // Confirm delete actions
+        $('.confirm-delete').click(function(e) {
+            if (!confirm('Are you sure you want to delete this item? This action cannot be undone.')) {
+                e.preventDefault();
+            }
         });
     </script>
 </body>
