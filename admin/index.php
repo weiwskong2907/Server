@@ -5,8 +5,17 @@ require_once '../includes/db.php';
 require_once '../includes/functions.php';
 
 // Check if user is logged in and is an admin
-// session_start(); // REMOVE THIS LINE - session already started in config.php
-if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['user_id'])) {
+    header('Location: ../login.php');
+    exit;
+}
+
+// Verify admin status directly from database
+$stmt = $pdo->prepare("SELECT is_admin FROM users WHERE id = ?");
+$stmt->execute([$_SESSION['user_id']]);
+$user = $stmt->fetch();
+
+if (!$user || $user['is_admin'] != 1) {
     header('Location: ../login.php');
     exit;
 }

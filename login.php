@@ -13,6 +13,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if ($user && password_verify($password, $user['password'])) {
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['username'] = $user['username'];
+        
+        // Add role based on is_admin field
+        $_SESSION['role'] = ($user['is_admin'] == 1) ? 'admin' : 'user';
+        
+        // Optionally add admin level if needed
+        if ($user['is_admin'] == 1) {
+            $_SESSION['admin_level'] = $user['admin_level'];
+        }
+        
         header("Location: index.php");
         exit();
     } else {
