@@ -153,7 +153,6 @@ include 'header.php';
                     <input type="text" class="form-control" value="<?php echo date('F d, Y h:i A', strtotime($post['created_at'])); ?>" readonly>
                 </div>
 
-                // Add to post_edit.php form
 <div class="form-group">
     <label for="featured_image">Featured Image</label>
     <input type="file" class="form-control-file" id="featured_image" name="featured_image">
@@ -163,22 +162,6 @@ include 'header.php';
         </div>
     <?php endif; ?>
 </div>
-
-<div class="form-group">
-    <label for="tags">Tags (comma separated)</label>
-    <input type="text" class="form-control" id="tags" name="tags" value="<?php echo htmlspecialchars($tags_string); ?>">
-</div>
-
-<div class="form-group">
-    <label for="meta_title">SEO Title</label>
-    <input type="text" class="form-control" id="meta_title" name="meta_title" value="<?php echo htmlspecialchars($post['meta_title'] ?? ''); ?>">
-</div>
-
-<div class="form-group">
-    <label for="meta_description">SEO Description</label>
-    <textarea class="form-control" id="meta_description" name="meta_description" rows="3"><?php echo htmlspecialchars($post['meta_description'] ?? ''); ?></textarea>
-</div>
-                
                 <button type="submit" class="btn btn-primary">Update Post</button>
                 <a href="posts.php" class="btn btn-secondary">Cancel</a>
             </form>
