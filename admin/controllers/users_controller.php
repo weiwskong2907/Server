@@ -20,7 +20,9 @@ class UsersController {
         $search_condition = '';
         
         if (!empty($search)) {
-            $search_condition = "WHERE username LIKE ? OR email LIKE ? OR role LIKE ?";
+            // Fix: Replace 'role' with CASE statement for is_admin
+            $search_condition = "WHERE username LIKE ? OR email LIKE ? OR 
+                               (CASE WHEN is_admin = 1 THEN 'admin' ELSE 'user' END) LIKE ?";
             $search_param = "%$search%";
             $params = [$search_param, $search_param, $search_param];
         }
@@ -38,8 +40,9 @@ class UsersController {
         $total_records = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
         $total_pages = ceil($total_records / $limit);
         
-        // Get users with pagination
-        $query = "SELECT *, CASE WHEN is_admin = 1 THEN 'admin' ELSE 'user' END as role FROM users $search_condition ORDER BY created_at DESC LIMIT $offset, $limit";
+        // Get users with pagination and add a calculated 'role' field
+        $query = "SELECT *, (CASE WHEN is_admin = 1 THEN 'admin' ELSE 'user' END) as role 
+                 FROM users $search_condition ORDER BY created_at DESC LIMIT $offset, $limit";
         $stmt = $this->pdo->prepare($query);
         
         if (!empty($params)) {
