@@ -159,17 +159,17 @@ include 'header.php';
                     <div class="col-md-6">
                         <label for="role" class="form-label">Role</label>
                         <select class="form-select" id="role" name="role">
-                            <option value="user" <?php echo $user['role'] === 'user' ? 'selected' : ''; ?>>User</option>
-                            <option value="admin" <?php echo $user['role'] === 'admin' ? 'selected' : ''; ?>>Admin</option>
-                            <option value="moderator" <?php echo $user['role'] === 'moderator' ? 'selected' : ''; ?>>Moderator</option>
+                            <option value="user" <?php echo (isset($user['role']) ? $user['role'] : ($user['is_admin'] == 0 ? 'selected' : '')); ?>>User</option>
+                            <option value="admin" <?php echo (isset($user['role']) ? $user['role'] : ($user['is_admin'] == 1 ? 'selected' : '')); ?>>Admin</option>
+                            <option value="moderator" <?php echo (isset($user['role']) && $user['role'] === 'moderator' ? 'selected' : ''); ?>>Moderator</option>
                         </select>
                     </div>
                     <div class="col-md-6">
                         <label for="status" class="form-label">Status</label>
                         <select class="form-select" id="status" name="status">
-                            <option value="active" <?php echo $user['status'] === 'active' ? 'selected' : ''; ?>>Active</option>
-                            <option value="inactive" <?php echo $user['status'] === 'inactive' ? 'selected' : ''; ?>>Inactive</option>
-                            <option value="suspended" <?php echo $user['status'] === 'suspended' ? 'selected' : ''; ?>>Suspended</option>
+                            <option value="active" <?php echo (isset($user['status']) ? $user['status'] === 'active' : true) ? 'selected' : ''; ?>>Active</option>
+                            <option value="inactive" <?php echo (isset($user['status']) && $user['status'] === 'inactive') ? 'selected' : ''; ?>>Inactive</option>
+                            <option value="suspended" <?php echo (isset($user['status']) && $user['status'] === 'suspended') ? 'selected' : ''; ?>>Suspended</option>
                         </select>
                     </div>
                 </div>

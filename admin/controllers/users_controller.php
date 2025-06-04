@@ -68,7 +68,10 @@ class UsersController {
      * Get a single user by ID
      */
     public function getUserById($id) {
-        $stmt = $this->pdo->prepare("SELECT * FROM users WHERE id = ?");
+        $stmt = $this->pdo->prepare("SELECT *, 
+                                  (CASE WHEN is_admin = 1 THEN 'admin' ELSE 'user' END) as role,
+                                  'active' as status 
+                                  FROM users WHERE id = ?");
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
@@ -160,15 +163,14 @@ class UsersController {
                 $params[] = $userData['email'];
             }
             
-            if (!empty($userData['role'])) {
-                $fields[] = "role = ?";
-                $params[] = $userData['role'];
+            // Map 'role' to 'is_admin'
+            if (isset($userData['role'])) {
+                $fields[] = "is_admin = ?";
+                $params[] = ($userData['role'] === 'admin') ? 1 : 0;
             }
             
-            if (!empty($userData['status'])) {
-                $fields[] = "status = ?";
-                $params[] = $userData['status'];
-            }
+            // Status field doesn't exist in database, so we skip it
+            // But we could add it if needed in the future
             
             // Only update password if provided
             if (!empty($userData['password'])) {
