@@ -77,7 +77,7 @@
                                 }
                                 if ($current_user && $current_user['is_admin']): 
                                 ?>
-                                <li><a class="dropdown-item" href="admin/admin_dashboard.php"><i class="fas fa-cog me-2"></i> Admin Panel</a></li>
+                                <li><a class="dropdown-item" href="admin/views/index.php"><i class="fas fa-cog me-2"></i> Admin Panel</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <?php endif; ?>
                                 <li><a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
