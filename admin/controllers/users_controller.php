@@ -39,7 +39,7 @@ class UsersController {
         $total_pages = ceil($total_records / $limit);
         
         // Get users with pagination
-        $query = "SELECT * FROM users $search_condition ORDER BY created_at DESC LIMIT $offset, $limit";
+        $query = "SELECT *, CASE WHEN is_admin = 1 THEN 'admin' ELSE 'user' END as role FROM users $search_condition ORDER BY created_at DESC LIMIT $offset, $limit";
         $stmt = $this->pdo->prepare($query);
         
         if (!empty($params)) {

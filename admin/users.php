@@ -6,7 +6,7 @@ require_once '../includes/functions.php';
 require_once 'controllers/users_controller.php';
 
 // Check if user is logged in and is an admin
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header('Location: ../login.php');
     exit;
 }
@@ -110,8 +110,8 @@ include 'header.php';
                                 <td><?php echo htmlspecialchars($user['username']); ?></td>
                                 <td><?php echo htmlspecialchars($user['email']); ?></td>
                                 <td>
-                                    <span class="badge bg-<?php echo $user['role'] === 'admin' ? 'danger' : 'secondary'; ?>">
-                                        <?php echo ucfirst(htmlspecialchars($user['role'])); ?>
+                                    <span class="badge bg-<?php echo isset($user['is_admin']) && $user['is_admin'] == 1 ? 'danger' : 'secondary'; ?>">
+                                        <?php echo ucfirst(htmlspecialchars(isset($user['is_admin']) && $user['is_admin'] == 1 ? 'admin' : 'user')); ?>
                                     </span>
                                 </td>
                                 <td>
