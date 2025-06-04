@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username']);
     $email = trim($_POST['email']);
     $role = trim($_POST['role']);
-    $status = trim($_POST['status']);
+    $birthday = !empty($_POST['birthday']) ? trim($_POST['birthday']) : null;
     $password = trim($_POST['password']);
     $confirm_password = trim($_POST['confirm_password']);
     
@@ -75,9 +75,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user_data = [
             'username' => $username,
             'email' => $email,
-            'password' => password_hash($password, PASSWORD_DEFAULT),
+            'password' => $password,
             'role' => $role,
-            'status' => $status
+            'birthday' => $birthday
         ];
         
         $result = $usersController->createUser($user_data);
@@ -139,12 +139,17 @@ include 'header.php';
                     <div class="col-md-6">
                         <label for="role" class="form-label">Role</label>
                         <select class="form-select" id="role" name="role">
-                            <option value="user" <?php echo (isset($_POST['role']) && $_POST['role'] === 'user') ? 'selected' : ''; ?>>User</option>
+                            <option value="user" <?php echo (isset($_POST['role']) && $_POST['role'] === 'user') ? 'selected' : 'selected'; ?>>User</option>
                             <option value="admin" <?php echo (isset($_POST['role']) && $_POST['role'] === 'admin') ? 'selected' : ''; ?>>Admin</option>
-                            <option value="moderator" <?php echo (isset($_POST['role']) && $_POST['role'] === 'moderator') ? 'selected' : ''; ?>>Moderator</option>
                         </select>
                     </div>
                     <div class="col-md-6">
+                        <label for="birthday" class="form-label">Birthday</label>
+                        <input type="date" class="form-control" id="birthday" name="birthday" value="<?php echo isset($_POST['birthday']) ? htmlspecialchars($_POST['birthday']) : ''; ?>">
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
                         <label for="status" class="form-label">Status</label>
                         <select class="form-select" id="status" name="status">
                             <option value="active" <?php echo (isset($_POST['status']) && $_POST['status'] === 'active') ? 'selected' : 'selected'; ?>>Active</option>

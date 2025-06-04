@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username']);
     $email = trim($_POST['email']);
     $role = trim($_POST['role']);
-    $status = trim($_POST['status']);
+    $birthday = !empty($_POST['birthday']) ? trim($_POST['birthday']) : null;
     $password = !empty($_POST['password']) ? trim($_POST['password']) : '';
     $confirm_password = !empty($_POST['confirm_password']) ? trim($_POST['confirm_password']) : '';
     
@@ -91,12 +91,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'username' => $username,
             'email' => $email,
             'role' => $role,
-            'status' => $status
+            'birthday' => $birthday
         ];
         
         // Only include password if it's being changed
         if (!empty($password)) {
-            $update_data['password'] = password_hash($password, PASSWORD_DEFAULT);
+            $update_data['password'] = $password;
         }
         
         $result = $usersController->updateUser($user_id, $update_data);
@@ -159,11 +159,17 @@ include 'header.php';
                     <div class="col-md-6">
                         <label for="role" class="form-label">Role</label>
                         <select class="form-select" id="role" name="role">
-                            <option value="user" <?php echo (isset($user['role']) ? $user['role'] : ($user['is_admin'] == 0 ? 'selected' : '')); ?>>User</option>
-                            <option value="admin" <?php echo (isset($user['role']) ? $user['role'] : ($user['is_admin'] == 1 ? 'selected' : '')); ?>>Admin</option>
-                            <option value="moderator" <?php echo (isset($user['role']) && $user['role'] === 'moderator' ? 'selected' : ''); ?>>Moderator</option>
+                            <option value="user" <?php echo (isset($user['role']) ? $user['role'] === 'user' : ($user['is_admin'] == 0)) ? 'selected' : ''; ?>>User</option>
+                            <option value="admin" <?php echo (isset($user['role']) ? $user['role'] === 'admin' : ($user['is_admin'] == 1)) ? 'selected' : ''; ?>>Admin</option>
                         </select>
                     </div>
+                    <div class="col-md-6">
+                        <label for="birthday" class="form-label">Birthday</label>
+                        <input type="date" class="form-control" id="birthday" name="birthday" value="<?php echo htmlspecialchars($user['birthday'] ?? ''); ?>">
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
                     <div class="col-md-6">
                         <label for="status" class="form-label">Status</label>
                         <select class="form-select" id="status" name="status">

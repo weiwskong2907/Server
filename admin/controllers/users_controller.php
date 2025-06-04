@@ -97,20 +97,26 @@ class UsersController {
         // Hash password
         $hashed_password = password_hash($userData['password'], PASSWORD_DEFAULT);
         
-        // Set default role if not provided
-        $role = isset($userData['role']) ? $userData['role'] : 'user';
+        // Convert role to is_admin
+        $is_admin = (isset($userData['role']) && $userData['role'] === 'admin') ? 1 : 0;
+        $admin_level = (isset($userData['role']) && $userData['role'] === 'admin') ? 1 : 0;
+        
+        // Set birthday if provided
+        $birthday = !empty($userData['birthday']) ? $userData['birthday'] : null;
         
         try {
             $stmt = $this->pdo->prepare(
-                "INSERT INTO users (username, email, password, role, created_at) 
-                 VALUES (?, ?, ?, ?, NOW())"
+                "INSERT INTO users (username, email, password, is_admin, admin_level, birthday, created_at) 
+                 VALUES (?, ?, ?, ?, ?, ?, NOW())"
             );
             
             $stmt->execute([
                 $userData['username'],
                 $userData['email'],
                 $hashed_password,
-                $role
+                $is_admin,
+                $admin_level,
+                $birthday
             ]);
             
             $user_id = $this->pdo->lastInsertId();
@@ -163,14 +169,19 @@ class UsersController {
                 $params[] = $userData['email'];
             }
             
-            // Map 'role' to 'is_admin'
-            if (isset($userData['role'])) {
-                $fields[] = "is_admin = ?";
-                $params[] = ($userData['role'] === 'admin') ? 1 : 0;
+            if (isset($userData['birthday'])) {
+                $fields[] = "birthday = ?";
+                $params[] = $userData['birthday'];
             }
             
-            // Status field doesn't exist in database, so we skip it
-            // But we could add it if needed in the future
+            if (isset($userData['role'])) {
+                $fields[] = "is_admin = ?";
+                $fields[] = "admin_level = ?";
+                $is_admin = ($userData['role'] === 'admin') ? 1 : 0;
+                $admin_level = ($userData['role'] === 'admin') ? 1 : 0;
+                $params[] = $is_admin;
+                $params[] = $admin_level;
+            }
             
             // Only update password if provided
             if (!empty($userData['password'])) {
