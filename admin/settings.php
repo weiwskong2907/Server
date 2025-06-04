@@ -6,7 +6,6 @@ require_once '../includes/functions.php';
 require_once 'controllers/settings_controller.php';
 
 // Check if user is logged in and is an admin
-session_start();
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     header('Location: ../login.php');
     exit;

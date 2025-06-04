@@ -5,7 +5,6 @@ require_once '../includes/db.php';
 require_once '../includes/functions.php';
 
 // Check if user is logged in and is an admin
-// session_start(); // REMOVE THIS LINE - session already started in config.php
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header('Location: ../login.php');
     exit;

@@ -7,7 +7,6 @@ require_once 'controllers/posts_controller.php';
 require_once 'controllers/categories_controller.php';
 
 // Check if user is logged in and is an admin
-session_start();
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     header('Location: ../login.php');
     exit;
