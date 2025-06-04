@@ -153,15 +153,6 @@ include 'header.php';
                     <input type="text" class="form-control" value="<?php echo date('F d, Y h:i A', strtotime($post['created_at'])); ?>" readonly>
                 </div>
 
-<div class="form-group">
-    <label for="featured_image">Featured Image</label>
-    <input type="file" class="form-control-file" id="featured_image" name="featured_image">
-    <?php if (!empty($post['featured_image'])): ?>
-        <div class="mt-2">
-            <img src="../uploads/<?php echo htmlspecialchars($post['featured_image']); ?>" alt="Featured Image" style="max-width: 200px;" class="img-thumbnail">
-        </div>
-    <?php endif; ?>
-</div>
                 <button type="submit" class="btn btn-primary">Update Post</button>
                 <a href="posts.php" class="btn btn-secondary">Cancel</a>
             </form>
