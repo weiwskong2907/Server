@@ -153,7 +153,7 @@ include 'header.php';
                                     <td><?php echo htmlspecialchars($post['username']); ?></td>
                                     <td><?php echo htmlspecialchars($post['category_name']); ?></td>
                                     <td>
-                                        <span class="badge badge-<?php echo $post['status'] == 'published' ? 'success' : ($post['status'] == 'draft' ? 'warning' : 'secondary'); ?>">
+                                        <span class="badge badge-<?php echo $post['status'] == 'published' ? 'success' : ($post['status'] == 'draft' ? 'warning' : 'secondary'); ?>" style="font: bold;color:black;">
                                             <?php echo ucfirst($post['status']); ?>
                                         </span>
                                     </td>
