@@ -159,13 +159,21 @@ include 'header.php';
                     <div class="col-md-6">
                         <label for="role" class="form-label">Role</label>
                         <select class="form-select" id="role" name="role">
-                            <option value="user" <?php echo (isset($user['role']) ? $user['role'] === 'user' : ($user['is_admin'] == 0)) ? 'selected' : ''; ?>>User</option>
-                            <option value="admin" <?php echo (isset($user['role']) ? $user['role'] === 'admin' : ($user['is_admin'] == 1)) ? 'selected' : ''; ?>>Admin</option>
+                            <option value="user" <?php echo (isset($user['is_admin']) && $user['is_admin'] == 0) ? 'selected' : ''; ?>>User</option>
+                            <option value="admin" <?php echo (isset($user['is_admin']) && $user['is_admin'] == 1) ? 'selected' : ''; ?>>Admin</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6" id="admin-level-container" style="<?php echo (isset($user['is_admin']) && $user['is_admin'] == 1) ? '' : 'display: none;'; ?>">
+                        <label for="admin_level" class="form-label">Admin Level</label>
+                        <select class="form-select" id="admin_level" name="admin_level">
+                            <option value="1" <?php echo (isset($user['admin_level']) && $user['admin_level'] == 1) ? 'selected' : ''; ?>>Level 1</option>
+                            <option value="2" <?php echo (isset($user['admin_level']) && $user['admin_level'] == 2) ? 'selected' : ''; ?>>Level 2</option>
                         </select>
                     </div>
                     <div class="col-md-6">
                         <label for="birthday" class="form-label">Birthday</label>
-                        <input type="date" class="form-control" id="birthday" name="birthday" value="<?php echo htmlspecialchars($user['birthday'] ?? ''); ?>">
+                        <input type="date" class="form-control" id="birthday" name="birthday" 
+                               value="<?php echo isset($user['birthday']) ? htmlspecialchars($user['birthday']) : ''; ?>">
                     </div>
                 </div>
                 
@@ -192,6 +200,43 @@ include 'header.php';
                     </div>
                 </div>
                 
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="name" class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                               value="<?php echo isset($user['name']) ? htmlspecialchars($user['name']) : ''; ?>">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="location" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="location" name="location" 
+                               value="<?php echo isset($user['location']) ? htmlspecialchars($user['location']) : ''; ?>">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="website" class="form-label">Website</label>
+                        <input type="url" class="form-control" id="website" name="website" 
+                               value="<?php echo isset($user['website']) ? htmlspecialchars($user['website']) : ''; ?>">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="profile_picture" class="form-label">Profile Picture</label>
+                        <input type="file" class="form-control" id="profile_picture" name="profile_picture">
+                        <?php if (!empty($user['profile_picture'])): ?>
+                            <div class="mt-2">
+                                <img src="../<?php echo htmlspecialchars($user['profile_picture']); ?>" 
+                                     alt="Profile Picture" class="img-thumbnail" style="max-width: 100px;">
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <label for="bio" class="form-label">Bio</label>
+                        <textarea class="form-control" id="bio" name="bio" rows="3"><?php echo isset($user['bio']) ? htmlspecialchars($user['bio']) : ''; ?></textarea>
+                    </div>
+                </div>
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="form-label">Created At</label>

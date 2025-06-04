@@ -158,7 +158,7 @@ class UsersController {
             $fields = [];
             $params = [];
             
-            // Only update fields that are provided
+            // Basic fields
             if (!empty($userData['username'])) {
                 $fields[] = "username = ?";
                 $params[] = $userData['username'];
@@ -169,24 +169,55 @@ class UsersController {
                 $params[] = $userData['email'];
             }
             
-            if (isset($userData['birthday'])) {
-                $fields[] = "birthday = ?";
-                $params[] = $userData['birthday'];
-            }
-            
+            // Handle role (is_admin)
             if (isset($userData['role'])) {
                 $fields[] = "is_admin = ?";
-                $fields[] = "admin_level = ?";
-                $is_admin = ($userData['role'] === 'admin') ? 1 : 0;
-                $admin_level = ($userData['role'] === 'admin') ? 1 : 0;
-                $params[] = $is_admin;
-                $params[] = $admin_level;
+                $params[] = ($userData['role'] === 'admin') ? 1 : 0;
+                
+                // Only set admin_level if role is admin
+                if ($userData['role'] === 'admin' && isset($userData['admin_level'])) {
+                    $fields[] = "admin_level = ?";
+                    $params[] = intval($userData['admin_level']);
+                } else if ($userData['role'] !== 'admin') {
+                    // Reset admin_level to 0 if not admin
+                    $fields[] = "admin_level = ?";
+                    $params[] = 0;
+                }
             }
             
-            // Only update password if provided
+            // Profile fields
+            $profile_fields = ['birthday', 'name', 'bio', 'location', 'website'];
+            foreach ($profile_fields as $field) {
+                if (isset($userData[$field])) {
+                    $fields[] = "$field = ?";
+                    $params[] = $userData[$field];
+                }
+            }
+            
+            // Handle password separately
             if (!empty($userData['password'])) {
                 $fields[] = "password = ?";
                 $params[] = password_hash($userData['password'], PASSWORD_DEFAULT);
+            }
+            
+            // Handle profile picture upload
+            if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] === UPLOAD_ERR_OK) {
+                $upload_dir = '../uploads/profile_pictures/';
+                $file_name = 'profile_' . uniqid() . '.' . pathinfo($_FILES['profile_picture']['name'], PATHINFO_EXTENSION);
+                $upload_path = $upload_dir . $file_name;
+                
+                if (move_uploaded_file($_FILES['profile_picture']['tmp_name'], $upload_path)) {
+                    $fields[] = "profile_picture = ?";
+                    $params[] = 'uploads/profile_pictures/' . $file_name;
+                    
+                    // Delete old profile picture if exists
+                    if (!empty($current_user['profile_picture'])) {
+                        $old_file = '../' . $current_user['profile_picture'];
+                        if (file_exists($old_file)) {
+                            unlink($old_file);
+                        }
+                    }
+                }
             }
             
             // Add user ID to params
