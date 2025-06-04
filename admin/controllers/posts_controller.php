@@ -195,4 +195,42 @@ class PostsController {
             'category_counts' => $category_counts
         ];
     }
+
+    /**
+     * Update a post
+     */
+    public function updatePost($id, $data) {
+        try {
+            $this->pdo->beginTransaction();
+            
+            // Update the post
+            $stmt = $this->pdo->prepare(
+                "UPDATE posts SET 
+                title = ?, 
+                content = ?, 
+                category_id = ?, 
+                status = ? 
+                WHERE id = ?"
+            );
+            $stmt->execute([
+                $data['title'],
+                $data['content'],
+                $data['category_id'],
+                $data['status'],
+                $id
+            ]);
+            
+            $this->pdo->commit();
+            
+            // Log activity
+            if (function_exists('log_activity')) {
+                log_activity('update', 'post', $id, "Post updated by admin");
+            }
+            
+            return ['success' => true, 'message' => 'Post updated successfully'];
+        } catch (Exception $e) {
+            $this->pdo->rollBack();
+            return ['success' => false, 'message' => 'Error updating post: ' . $e->getMessage()];
+        }
+    }
 }
