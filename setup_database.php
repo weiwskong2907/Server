@@ -40,7 +40,7 @@ try {
             username VARCHAR(50) NOT NULL UNIQUE,
             email VARCHAR(100) NOT NULL UNIQUE,
             password VARCHAR(255) NOT NULL,
-            role ENUM('user', 'admin') DEFAULT 'user',
+            is_admin BOOLEAN DEFAULT FALSE,
             status ENUM('active', 'inactive', 'banned') DEFAULT 'active',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -127,12 +127,12 @@ try {
     // Check if users table exists and has admin user
     $stmt = $pdo->query("SHOW TABLES LIKE 'users'");
     if ($stmt->rowCount() > 0) {
-        $stmt = $pdo->query("SELECT COUNT(*) as count FROM users WHERE role = 'admin'");
+        $stmt = $pdo->query("SELECT COUNT(*) as count FROM users WHERE is_admin = 1");
         $result = $stmt->fetch();
         
         if ($result['count'] == 0) {
             $password = password_hash('admin123', PASSWORD_DEFAULT);
-            $sql = "INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, 'admin')";
+            $sql = "INSERT INTO users (username, email, password, is_admin) VALUES (?, ?, ?, 1)";
             $stmt = $pdo->prepare($sql);
             $stmt->execute(['admin', 'admin@example.com', $password]);
             echo "Default admin user created\n";
