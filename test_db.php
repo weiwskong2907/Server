@@ -39,8 +39,10 @@ try {
     // Test database privileges
     $stmt = $pdo->query("SHOW GRANTS");
     echo "\nDatabase privileges:\n";
-    while ($row = $stmt->fetch()) {
-        echo $row[0] . "\n";
+    while ($row = $stmt->fetch(PDO::FETCH_NUM)) {
+        if (isset($row[0])) {
+            echo $row[0] . "\n";
+        }
     }
     
 } catch (PDOException $e) {
@@ -53,5 +55,38 @@ try {
     echo "PHP PDO drivers: " . implode(", ", PDO::getAvailableDrivers()) . "\n";
     echo "MySQL socket: " . (file_exists('/var/run/mysqld/mysqld.sock') ? "Exists" : "Not found") . "\n";
     echo "MySQL port 3306: " . (@fsockopen('localhost', 3306) ? "Open" : "Closed") . "\n";
+    
+    // Try alternative connection methods
+    echo "\nTrying alternative connection methods:\n";
+    
+    // Try TCP/IP connection
+    try {
+        $dsn = "mysql:host=127.0.0.1;port=3306;dbname=" . DB_NAME . ";charset=utf8mb4";
+        $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
+        echo "TCP/IP connection successful!\n";
+    } catch (PDOException $e) {
+        echo "TCP/IP connection failed: " . $e->getMessage() . "\n";
+    }
+    
+    // Try Unix socket connection
+    try {
+        $dsn = "mysql:unix_socket=/var/run/mysqld/mysqld.sock;dbname=" . DB_NAME . ";charset=utf8mb4";
+        $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
+        echo "Unix socket connection successful!\n";
+    } catch (PDOException $e) {
+        echo "Unix socket connection failed: " . $e->getMessage() . "\n";
+    }
+    
+    // Check MySQL service status
+    echo "\nMySQL Service Status:\n";
+    $output = [];
+    exec("systemctl status mysql 2>&1", $output);
+    echo implode("\n", $output) . "\n";
+    
+    // Check MySQL process
+    echo "\nMySQL Process:\n";
+    $output = [];
+    exec("ps aux | grep mysql 2>&1", $output);
+    echo implode("\n", $output) . "\n";
 }
 echo "</pre>"; 
