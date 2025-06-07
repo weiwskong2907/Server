@@ -13,8 +13,7 @@ echo "<h2>Database Setup</h2>";
 echo "<pre>";
 
 try {
-    // Connect to MySQL without database
-    $dsn = "mysql:host=" . DB_HOST . ";charset=utf8mb4";
+    $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4";
     $options = [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
