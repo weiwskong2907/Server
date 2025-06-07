@@ -124,17 +124,24 @@ try {
         echo "Table created successfully\n";
     }
     
-    // Create default admin user if not exists
-    $stmt = $pdo->query("SELECT COUNT(*) FROM users WHERE role = 'admin'");
-    if ($stmt->fetchColumn() == 0) {
-        $password = password_hash('admin123', PASSWORD_DEFAULT);
-        $sql = "INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, 'admin')";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute(['admin', 'admin@example.com', $password]);
-        echo "Default admin user created\n";
-        echo "Username: admin\n";
-        echo "Password: admin123\n";
-        echo "Please change these credentials immediately!\n";
+    // Check if users table exists and has admin user
+    $stmt = $pdo->query("SHOW TABLES LIKE 'users'");
+    if ($stmt->rowCount() > 0) {
+        $stmt = $pdo->query("SELECT COUNT(*) as count FROM users WHERE role = 'admin'");
+        $result = $stmt->fetch();
+        
+        if ($result['count'] == 0) {
+            $password = password_hash('admin123', PASSWORD_DEFAULT);
+            $sql = "INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, 'admin')";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute(['admin', 'admin@example.com', $password]);
+            echo "Default admin user created\n";
+            echo "Username: admin\n";
+            echo "Password: admin123\n";
+            echo "Please change these credentials immediately!\n";
+        } else {
+            echo "Admin user already exists\n";
+        }
     }
     
     echo "\nDatabase setup completed successfully!\n";
