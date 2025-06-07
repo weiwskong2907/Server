@@ -17,29 +17,39 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Load environment variables
-require_once __DIR__ . '/../vendor/autoload.php';
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
-$dotenv->load();
+// Load environment variables from .env file
+$envFile = __DIR__ . '/../.env';
+if (file_exists($envFile)) {
+    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (strpos($line, '=') !== false && strpos($line, '#') !== 0) {
+            list($key, $value) = explode('=', $line, 2);
+            $key = trim($key);
+            $value = trim($value);
+            putenv("$key=$value");
+            $_ENV[$key] = $value;
+        }
+    }
+}
 
 // Database configuration
-define('DB_HOST', $_ENV['DB_HOST'] ?? 'localhost');
-define('DB_NAME', $_ENV['DB_NAME'] ?? 'blog');
-define('DB_USER', $_ENV['DB_USER'] ?? 'root');
-define('DB_PASS', $_ENV['DB_PASS'] ?? '');
+define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
+define('DB_NAME', getenv('DB_NAME') ?: 'blog');
+define('DB_USER', getenv('DB_USER') ?: 'root');
+define('DB_PASS', getenv('DB_PASS') ?: '');
 
 // Site settings
-define('SITE_NAME', $_ENV['SITE_NAME'] ?? 'My Blog');
-define('SITE_URL', $_ENV['SITE_URL'] ?? 'http://localhost');
-define('ADMIN_EMAIL', $_ENV['ADMIN_EMAIL'] ?? 'admin@example.com');
+define('SITE_NAME', getenv('SITE_NAME') ?: 'My Blog');
+define('SITE_URL', getenv('SITE_URL') ?: 'http://localhost');
+define('ADMIN_EMAIL', getenv('ADMIN_EMAIL') ?: 'admin@example.com');
 
 // SMTP settings
-define('SMTP_HOST', $_ENV['SMTP_HOST'] ?? 'smtp.gmail.com');
-define('SMTP_PORT', $_ENV['SMTP_PORT'] ?? 587);
-define('SMTP_USER', $_ENV['SMTP_USER'] ?? '');
-define('SMTP_PASS', $_ENV['SMTP_PASS'] ?? '');
-define('SMTP_FROM', $_ENV['SMTP_FROM'] ?? 'noreply@example.com');
-define('SMTP_FROM_NAME', $_ENV['SMTP_FROM_NAME'] ?? 'My Blog');
+define('SMTP_HOST', getenv('SMTP_HOST') ?: 'smtp.gmail.com');
+define('SMTP_PORT', getenv('SMTP_PORT') ?: 587);
+define('SMTP_USER', getenv('SMTP_USER') ?: '');
+define('SMTP_PASS', getenv('SMTP_PASS') ?: '');
+define('SMTP_FROM', getenv('SMTP_FROM') ?: 'noreply@example.com');
+define('SMTP_FROM_NAME', getenv('SMTP_FROM_NAME') ?: 'My Blog');
 
 // Security settings
 define('HASH_COST', 12);
