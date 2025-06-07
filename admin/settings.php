@@ -4,6 +4,7 @@ require_once '../includes/config.php';
 require_once '../includes/db.php';
 require_once '../includes/functions.php';
 require_once 'controllers/settings_controller.php';
+require_once 'layout.php';
 
 // Check if user is logged in and is an admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
@@ -28,126 +29,205 @@ $page_title = 'Site Settings';
 $errors = [];
 $success = '';
 
-// Handle form submission
+// Get current settings
+$settings = get_system_settings();
+
+// Handle settings update
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Validate and sanitize inputs
-    $site_name = trim($_POST['site_name']);
-    $site_description = trim($_POST['site_description']);
-    $site_email = trim($_POST['site_email']);
-    $posts_per_page = (int)$_POST['posts_per_page'];
-    $comments_approval = isset($_POST['comments_approval']) ? 1 : 0;
-    $user_registration = isset($_POST['user_registration']) ? 1 : 0;
-    $maintenance_mode = isset($_POST['maintenance_mode']) ? 1 : 0;
+    $new_settings = [
+        'site_name' => $_POST['site_name'],
+        'site_description' => $_POST['site_description'],
+        'site_email' => $_POST['site_email'],
+        'registration_enabled' => isset($_POST['registration_enabled']),
+        'email_verification' => isset($_POST['email_verification']),
+        'moderation_enabled' => isset($_POST['moderation_enabled']),
+        'posts_per_page' => (int)$_POST['posts_per_page'],
+        'comments_per_page' => (int)$_POST['comments_per_page'],
+        'max_upload_size' => (int)$_POST['max_upload_size'],
+        'allowed_file_types' => $_POST['allowed_file_types'],
+        'maintenance_mode' => isset($_POST['maintenance_mode']),
+        'maintenance_message' => $_POST['maintenance_message']
+    ];
     
-    // Basic validation
-    if (empty($site_name)) {
-        $errors[] = 'Site name is required';
+    if (update_system_settings($new_settings)) {
+        $_SESSION['alert'] = ['type' => 'success', 'message' => 'Settings updated successfully.'];
     }
     
-    if (empty($site_email)) {
-        $errors[] = 'Site email is required';
-    } elseif (!filter_var($site_email, FILTER_VALIDATE_EMAIL)) {
-        $errors[] = 'Invalid email format';
-    }
-    
-    if ($posts_per_page < 1) {
-        $errors[] = 'Posts per page must be at least 1';
-    }
-    
-    // If no errors, update settings
-    if (empty($errors)) {
-        $settings = [
-            'site_name' => $site_name,
-            'site_description' => $site_description,
-            'site_email' => $site_email,
-            'posts_per_page' => $posts_per_page,
-            'comments_approval' => $comments_approval,
-            'user_registration' => $user_registration,
-            'maintenance_mode' => $maintenance_mode
-        ];
-        
-        $result = $settingsController->updateSettings($settings);
-        
-        if ($result['success']) {
-            $success = 'Settings updated successfully';
-        } else {
-            $errors[] = $result['message'];
-        }
-    }
+    // Redirect to prevent form resubmission
+    header('Location: settings.php');
+    exit;
 }
 
-// Get current settings
-$settings = $settingsController->getAllSettings();
+// Get page header
+echo get_admin_header('System Settings', [
+    'Dashboard' => 'index.php',
+    'Settings' => null
+]);
 
-// Include header
-include 'header.php';
+// Display alerts
+if (isset($_SESSION['alert'])) {
+    echo get_admin_alert($_SESSION['alert']['type'], $_SESSION['alert']['message']);
+    unset($_SESSION['alert']);
+}
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3">Site Settings</h1>
-</div>
-
-<?php if (!empty($success)): ?>
-<div class="alert alert-success">
-    <?php echo htmlspecialchars($success); ?>
-</div>
-<?php endif; ?>
-
-<?php if (!empty($errors)): ?>
-<div class="alert alert-danger">
-    <ul class="mb-0">
-        <?php foreach ($errors as $error): ?>
-            <li><?php echo htmlspecialchars($error); ?></li>
-        <?php endforeach; ?>
-    </ul>
-</div>
-<?php endif; ?>
-
 <div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">System Settings</h5>
+    </div>
+    
     <div class="card-body">
-        <form method="post" action="">
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <h5>General Settings</h5>
-                    <div class="mb-3">
-                        <label for="site_name" class="form-label">Site Name</label>
-                        <input type="text" class="form-control" id="site_name" name="site_name" value="<?php echo htmlspecialchars($settings['site_name'] ?? SITE_NAME); ?>" required>
+        <form method="POST" class="needs-validation" novalidate>
+            <!-- General Settings -->
+            <div class="mb-4">
+                <h6 class="mb-3">General Settings</h6>
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Site Name</label>
+                        <input type="text" name="site_name" class="form-control" 
+                               value="<?php echo htmlspecialchars($settings['site_name']); ?>" required>
                     </div>
-                    <div class="mb-3">
-                        <label for="site_description" class="form-label">Site Description</label>
-                        <textarea class="form-control" id="site_description" name="site_description" rows="3"><?php echo htmlspecialchars($settings['site_description'] ?? ''); ?></textarea>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label">Site Email</label>
+                        <input type="email" name="site_email" class="form-control" 
+                               value="<?php echo htmlspecialchars($settings['site_email']); ?>" required>
                     </div>
-                    <div class="mb-3">
-                        <label for="site_email" class="form-label">Site Email</label>
-                        <input type="email" class="form-control" id="site_email" name="site_email" value="<?php echo htmlspecialchars($settings['site_email'] ?? SMTP_FROM_EMAIL); ?>" required>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <h5>Content Settings</h5>
-                    <div class="mb-3">
-                        <label for="posts_per_page" class="form-label">Posts Per Page</label>
-                        <input type="number" class="form-control" id="posts_per_page" name="posts_per_page" value="<?php echo (int)($settings['posts_per_page'] ?? 10); ?>" min="1" required>
-                    </div>
-                    <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="comments_approval" name="comments_approval" <?php echo (isset($settings['comments_approval']) && $settings['comments_approval']) ? 'checked' : ''; ?>>
-                        <label class="form-check-label" for="comments_approval">Require Comment Approval</label>
-                    </div>
-                    <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="user_registration" name="user_registration" <?php echo (isset($settings['user_registration']) && $settings['user_registration']) ? 'checked' : ''; ?>>
-                        <label class="form-check-label" for="user_registration">Allow User Registration</label>
-                    </div>
-                    <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="maintenance_mode" name="maintenance_mode" <?php echo (isset($settings['maintenance_mode']) && $settings['maintenance_mode']) ? 'checked' : ''; ?>>
-                        <label class="form-check-label" for="maintenance_mode">Maintenance Mode</label>
+                    
+                    <div class="col-12">
+                        <label class="form-label">Site Description</label>
+                        <textarea name="site_description" class="form-control" rows="2"><?php 
+                            echo htmlspecialchars($settings['site_description']); 
+                        ?></textarea>
                     </div>
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary">Save Settings</button>
+            
+            <!-- User Settings -->
+            <div class="mb-4">
+                <h6 class="mb-3">User Settings</h6>
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-check form-switch">
+                            <input type="checkbox" name="registration_enabled" class="form-check-input" 
+                                   id="registration_enabled" <?php echo $settings['registration_enabled'] ? 'checked' : ''; ?>>
+                            <label class="form-check-label" for="registration_enabled">
+                                Enable User Registration
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-check form-switch">
+                            <input type="checkbox" name="email_verification" class="form-check-input" 
+                                   id="email_verification" <?php echo $settings['email_verification'] ? 'checked' : ''; ?>>
+                            <label class="form-check-label" for="email_verification">
+                                Require Email Verification
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-check form-switch">
+                            <input type="checkbox" name="moderation_enabled" class="form-check-input" 
+                                   id="moderation_enabled" <?php echo $settings['moderation_enabled'] ? 'checked' : ''; ?>>
+                            <label class="form-check-label" for="moderation_enabled">
+                                Enable Content Moderation
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Content Settings -->
+            <div class="mb-4">
+                <h6 class="mb-3">Content Settings</h6>
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Posts Per Page</label>
+                        <input type="number" name="posts_per_page" class="form-control" 
+                               value="<?php echo $settings['posts_per_page']; ?>" min="1" max="100" required>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label">Comments Per Page</label>
+                        <input type="number" name="comments_per_page" class="form-control" 
+                               value="<?php echo $settings['comments_per_page']; ?>" min="1" max="100" required>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label">Max Upload Size (MB)</label>
+                        <input type="number" name="max_upload_size" class="form-control" 
+                               value="<?php echo $settings['max_upload_size']; ?>" min="1" max="100" required>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label">Allowed File Types</label>
+                        <input type="text" name="allowed_file_types" class="form-control" 
+                               value="<?php echo htmlspecialchars($settings['allowed_file_types']); ?>" 
+                               placeholder="jpg,jpeg,png,gif,pdf" required>
+                        <div class="form-text">Comma-separated list of file extensions</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Maintenance Settings -->
+            <div class="mb-4">
+                <h6 class="mb-3">Maintenance Settings</h6>
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-check form-switch">
+                            <input type="checkbox" name="maintenance_mode" class="form-check-input" 
+                                   id="maintenance_mode" <?php echo $settings['maintenance_mode'] ? 'checked' : ''; ?>>
+                            <label class="form-check-label" for="maintenance_mode">
+                                Enable Maintenance Mode
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="col-12">
+                        <label class="form-label">Maintenance Message</label>
+                        <textarea name="maintenance_message" class="form-control" rows="2"><?php 
+                            echo htmlspecialchars($settings['maintenance_message']); 
+                        ?></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-end">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-2"></i>Save Settings
+                </button>
+            </div>
         </form>
     </div>
 </div>
 
+<script>
+// Form validation
+(function() {
+    'use strict';
+    
+    const forms = document.querySelectorAll('.needs-validation');
+    
+    Array.from(forms).forEach(form => {
+        form.addEventListener('submit', event => {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
+            form.classList.add('was-validated');
+        }, false);
+    });
+})();
+</script>
+
 <?php
-// Include footer
-include 'footer.php';
+// Get page footer
+echo get_admin_footer();
 ?>

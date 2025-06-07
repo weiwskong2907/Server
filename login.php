@@ -1,65 +1,92 @@
 <?php
 require_once 'includes/config.php';
-require_once 'includes/db.php';
+require_once 'includes/layout.php';
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $username = $_POST['username'];
-    $password = $_POST['password'];
+// Redirect if already logged in
+if (is_logged_in()) {
+    header('Location: /');
+    exit();
+}
+
+$error = '';
+
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $email = $_POST['email'] ?? '';
+    $password = $_POST['password'] ?? '';
+    $remember = isset($_POST['remember']);
     
-    $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ?");
-    $stmt->execute([$username]);
-    $user = $stmt->fetch();
-    
-    if ($user && password_verify($password, $user['password'])) {
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['username'] = $user['username'];
-        
-        // Add role based on is_admin field
-        $_SESSION['role'] = ($user['is_admin'] == 1) ? 'admin' : 'user';
-        
-        // Optionally add admin level if needed
-        if ($user['is_admin'] == 1) {
-            $_SESSION['admin_level'] = $user['admin_level'];
-        }
-        
-        header("Location: index.php");
-        exit();
+    // Validate input
+    if (empty($email) || empty($password)) {
+        $error = 'Please fill in all fields';
     } else {
-        $error = "Invalid username or password";
+        // Attempt login
+        $result = login_user($email, $password, $remember);
+        
+        if ($result['success']) {
+            // Redirect to intended page or home
+            $redirect = $_SESSION['redirect_after_login'] ?? '/';
+            unset($_SESSION['redirect_after_login']);
+            header("Location: $redirect");
+            exit();
+        } else {
+            $error = $result['message'];
+        }
     }
 }
 
-include 'layouts/header.php';
+// Get page header
+echo get_page_header('Login', ['Login' => null]);
+
+// Display error
+if ($error) {
+    echo get_alert('danger', $error);
+}
 ?>
 
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">Login</div>
-                <div class="card-body">
-                    <?php if (isset($error)): ?>
-                        <div class="alert alert-danger"><?php echo $error; ?></div>
-                    <?php endif; ?>
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card">
+            <div class="card-body">
+                <h1 class="h3 mb-4 text-center">Login</h1>
+                
+                <form method="POST" action="/login.php">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email address</label>
+                        <input type="email" class="form-control" id="email" name="email" required 
+                               value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
+                    </div>
                     
-                    <form method="POST">
-                        <div class="form-group mb-3">
-                            <label>Username</label>
-                            <input type="text" name="username" class="form-control" required>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label>Password</label>
-                            <input type="password" name="password" class="form-control" required>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <button type="submit" class="btn btn-primary">Login</button>
-                            <a href="forgot_password.php" class="text-decoration-none">Forgot Password?</a>
-                        </div>
-                    </form>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="remember" name="remember">
+                        <label class="form-check-label" for="remember">Remember me</label>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Login</button>
+                    </div>
+                </form>
+                
+                <div class="mt-3 text-center">
+                    <a href="/forgot-password.php" class="text-decoration-none">Forgot password?</a>
+                </div>
+                
+                <hr>
+                
+                <div class="text-center">
+                    <p class="mb-0">Don't have an account? <a href="/register.php" class="text-decoration-none">Register</a></p>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<?php include 'layouts/footer.php'; ?>
+<?php
+// Get page footer
+echo get_page_footer();
+?>

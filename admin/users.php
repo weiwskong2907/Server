@@ -4,6 +4,7 @@ require_once '../includes/config.php';
 require_once '../includes/db.php';
 require_once '../includes/functions.php';
 require_once 'controllers/users_controller.php';
+require_once 'layout.php';
 
 // Check if user is logged in and is an admin
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
@@ -50,11 +51,61 @@ $result = $usersController->getAllUsers($page, $records_per_page, $search);
 $users = $result['users'];
 $pagination = $result['pagination'];
 
-// Set page title
-$page_title = 'User Management';
+// Get filter parameters
+$filter = isset($_GET['filter']) ? $_GET['filter'] : 'all';
+$per_page = 20;
 
-// Include header
-include 'header.php';
+// Get users data
+$users_data = get_user_management_data($page, $per_page, $filter, $search);
+
+// Handle user actions
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    $user_id = (int)$_POST['user_id'];
+    $action = $_POST['action'];
+    
+    switch ($action) {
+        case 'approve':
+            if (update_user_status($user_id, 'active')) {
+                $_SESSION['alert'] = ['type' => 'success', 'message' => 'User approved successfully.'];
+            }
+            break;
+            
+        case 'suspend':
+            if (update_user_status($user_id, 'suspended')) {
+                $_SESSION['alert'] = ['type' => 'success', 'message' => 'User suspended successfully.'];
+            }
+            break;
+            
+        case 'delete':
+            if (delete_user($user_id)) {
+                $_SESSION['alert'] = ['type' => 'success', 'message' => 'User deleted successfully.'];
+            }
+            break;
+            
+        case 'change_role':
+            $role = $_POST['role'];
+            if (update_user_role($user_id, $role)) {
+                $_SESSION['alert'] = ['type' => 'success', 'message' => 'User role updated successfully.'];
+            }
+            break;
+    }
+    
+    // Redirect to prevent form resubmission
+    header("Location: users.php?filter=$filter&search=$search&page=$page");
+    exit;
+}
+
+// Get page header
+echo get_admin_header('User Management', [
+    'Dashboard' => 'index.php',
+    'Users' => null
+]);
+
+// Display alerts
+if (isset($_SESSION['alert'])) {
+    echo get_admin_alert($_SESSION['alert']['type'], $_SESSION['alert']['message']);
+    unset($_SESSION['alert']);
+}
 ?>
 
 <div class="container-fluid py-4">
@@ -85,6 +136,34 @@ include 'header.php';
             </form>
         </div>
     </div>
+    
+    <!-- Filter Tabs -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link <?php echo $filter === 'all' ? 'active' : ''; ?>" 
+               href="?filter=all<?php echo $search ? '&search=' . urlencode($search) : ''; ?>">
+                All Users
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link <?php echo $filter === 'pending' ? 'active' : ''; ?>" 
+               href="?filter=pending<?php echo $search ? '&search=' . urlencode($search) : ''; ?>">
+                Pending
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link <?php echo $filter === 'active' ? 'active' : ''; ?>" 
+               href="?filter=active<?php echo $search ? '&search=' . urlencode($search) : ''; ?>">
+                Active
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link <?php echo $filter === 'suspended' ? 'active' : ''; ?>" 
+               href="?filter=suspended<?php echo $search ? '&search=' . urlencode($search) : ''; ?>">
+                Suspended
+            </a>
+        </li>
+    </ul>
     
     <!-- Users Table -->
     <div class="card">
@@ -169,4 +248,7 @@ include 'header.php';
     </div>
 </div>
 
-<?php include 'footer.php'; ?>
+<?php
+// Get page footer
+echo get_admin_footer();
+?>

@@ -1,39 +1,93 @@
 <?php
-require_once 'config.php';
-require_once __DIR__ . '/../PHPMailer/src/Exception.php';
-require_once __DIR__ . '/../PHPMailer/src/PHPMailer.php';
-require_once __DIR__ . '/../PHPMailer/src/SMTP.php';
+/**
+ * Email helper functions
+ */
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-function send_email($to, $subject, $message) {
-    // Create a new PHPMailer instance
-    $mail = new PHPMailer(true);
-    
-    try {
-        // Server settings
-        $mail->isSMTP();                                      // Use SMTP
-        $mail->Host       = SMTP_HOST;                        // SMTP server
-        $mail->SMTPAuth   = true;                             // Enable SMTP authentication
-        $mail->Username   = SMTP_USER;                        // SMTP username
-        $mail->Password   = SMTP_PASS;                        // SMTP password
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;   // Enable TLS encryption
-        $mail->Port       = SMTP_PORT;                        // TCP port to connect to
+require_once __DIR__ . '/../PHPMailer/Exception.php';
+require_once __DIR__ . '/../PHPMailer/PHPMailer.php';
+require_once __DIR__ . '/../PHPMailer/SMTP.php';
 
+/**
+ * Send verification email
+ */
+function send_verification_email($to_email, $username, $verification_link) {
+    $subject = 'Verify your email address';
+    $body = "
+        <h2>Welcome to " . SITE_NAME . "!</h2>
+        <p>Hi $username,</p>
+        <p>Thank you for registering. Please click the link below to verify your email address:</p>
+        <p><a href='$verification_link'>$verification_link</a></p>
+        <p>This link will expire in 24 hours.</p>
+        <p>If you did not create an account, please ignore this email.</p>
+    ";
+    
+    return send_email($to_email, $subject, $body);
+}
+
+/**
+ * Send password reset email
+ */
+function send_password_reset_email($to_email, $username, $reset_link) {
+    $subject = 'Reset your password';
+    $body = "
+        <h2>Password Reset Request</h2>
+        <p>Hi $username,</p>
+        <p>We received a request to reset your password. Click the link below to reset it:</p>
+        <p><a href='$reset_link'>$reset_link</a></p>
+        <p>This link will expire in 1 hour.</p>
+        <p>If you did not request a password reset, please ignore this email.</p>
+    ";
+    
+    return send_email($to_email, $subject, $body);
+}
+
+/**
+ * Send notification email
+ */
+function send_notification_email($to_email, $subject, $message) {
+    $body = "
+        <h2>$subject</h2>
+        <p>$message</p>
+    ";
+    
+    return send_email($to_email, $subject, $body);
+}
+
+/**
+ * Send email using PHPMailer
+ */
+function send_email($to_email, $subject, $body) {
+    try {
+        $mail = new PHPMailer(true);
+        
+        // Server settings
+        $mail->isSMTP();
+        $mail->Host = SMTP_HOST;
+        $mail->SMTPAuth = true;
+        $mail->Username = SMTP_USER;
+        $mail->Password = SMTP_PASS;
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port = SMTP_PORT;
+        
         // Recipients
         $mail->setFrom(SMTP_FROM_EMAIL, SITE_NAME);
-        $mail->addAddress($to);                               // Add a recipient
-
+        $mail->addAddress($to_email);
+        
         // Content
-        $mail->isHTML(true);                                  // Set email format to HTML
+        $mail->isHTML(true);
         $mail->Subject = $subject;
-        $mail->Body    = $message;
-
+        $mail->Body = $body;
+        
+        // Add plain text version
+        $mail->AltBody = strip_tags($body);
+        
         $mail->send();
         return true;
     } catch (Exception $e) {
-        error_log("Message could not be sent. Mailer Error: {$mail->ErrorInfo}");
+        error_log("Email sending failed: " . $mail->ErrorInfo);
         return false;
     }
 }

@@ -1,90 +1,123 @@
 <?php
 require_once 'includes/config.php';
-require_once 'includes/db.php';
-require_once 'includes/functions.php';
+require_once 'includes/layout.php';
 
-// Check if user is logged in
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
+// Get recent posts
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$posts = get_posts_paginated($page);
+$categories = get_categories();
+
+// Get popular tags
+$popular_tags = get_popular_tags(10);
+
+// Get page header
+echo get_page_header('Home');
+
+// Display alerts
+if (isset($_SESSION['alert'])) {
+    echo get_alert($_SESSION['alert']['type'], $_SESSION['alert']['message']);
+    unset($_SESSION['alert']);
 }
-
-
-// Get all posts
-$stmt = $pdo->query("SELECT posts.*, users.username 
-                     FROM posts 
-                     JOIN users ON posts.user_id = users.id 
-                     ORDER BY created_at DESC");
-$posts = $stmt->fetchAll();
-
-include 'layouts/header.php';
 ?>
 
-<?php if (isset($_GET['success']) && $_GET['success'] == 'post_created'): ?>
-    <div class="alert alert-success">Your post was created successfully!</div>
-<?php endif; ?>
+<div class="row">
+    <div class="col-md-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">Recent Posts</h1>
+            <?php if (is_logged_in()): ?>
+                <a href="/create-post.php" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> New Post
+                </a>
+            <?php endif; ?>
+        </div>
 
-<div class="container mt-4">
-    <h1>Welcome to <?php echo SITE_NAME; ?></h1>
-    
-    <div class="mb-4">
-        <a href="post.php?action=new" class="btn btn-primary">Create New Post</a>
-    </div>
-
-    <!-- Add this before the regular posts list -->
-    <?php
-    try {
-        $featured_posts = $pdo->query("SELECT posts.*, users.username 
-                                      FROM posts 
-                                      JOIN users ON posts.user_id = users.id 
-                                      WHERE is_featured = TRUE 
-                                      ORDER BY created_at DESC 
-                                      LIMIT 3")->fetchAll();
-    } catch(PDOException $e) {
-        // If the column doesn't exist, just set featured_posts to an empty array
-        $featured_posts = [];
-    }
-    
-    if ($featured_posts && count($featured_posts) > 0): ?>
-        <div class="featured-posts mb-5">
-            <h3><i class="fas fa-star text-warning"></i> Featured Posts</h3>
-            <div class="row">
-                <?php foreach($featured_posts as $post): ?>
-                    <div class="col-md-4">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <h5 class="card-title"><?php echo htmlspecialchars($post['title']); ?></h5>
-                                <h6 class="card-subtitle mb-2 text-muted">
-                                    By <?php echo htmlspecialchars($post['username']); ?>
-                                </h6>
-                                <p class="card-text">
-                                    <?php echo nl2br(htmlspecialchars(substr($post['content'], 0, 150))); ?>...
-                                </p>
-                                <a href="post.php?id=<?php echo $post['id']; ?>" class="btn btn-outline-primary btn-sm">Read More</a>
+        <?php if (empty($posts['posts'])): ?>
+            <div class="alert alert-info">
+                No posts found. Be the first to create a post!
+            </div>
+        <?php else: ?>
+            <?php foreach ($posts['posts'] as $post): ?>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h2 class="card-title h5">
+                            <a href="/post.php?id=<?php echo $post['id']; ?>" class="text-decoration-none">
+                                <?php echo htmlspecialchars($post['title']); ?>
+                            </a>
+                        </h2>
+                        <div class="text-muted small mb-2">
+                            Posted by 
+                            <a href="/profile.php?id=<?php echo $post['user_id']; ?>" class="text-decoration-none">
+                                <?php echo htmlspecialchars($post['username']); ?>
+                            </a>
+                            in 
+                            <a href="/category.php?id=<?php echo $post['category_id']; ?>" class="text-decoration-none">
+                                <?php echo htmlspecialchars($post['category_name']); ?>
+                            </a>
+                            <?php echo time_ago($post['created_at']); ?>
+                        </div>
+                        <p class="card-text">
+                            <?php echo htmlspecialchars(substr($post['content'], 0, 200)) . '...'; ?>
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="btn-group">
+                                <a href="/post.php?id=<?php echo $post['id']; ?>" class="btn btn-sm btn-outline-primary">
+                                    Read More
+                                </a>
+                                <?php if (is_logged_in() && ($post['user_id'] === $_SESSION['user_id'] || is_admin())): ?>
+                                    <a href="/edit-post.php?id=<?php echo $post['id']; ?>" class="btn btn-sm btn-outline-secondary">
+                                        Edit
+                                    </a>
+                                <?php endif; ?>
                             </div>
+                            <small class="text-muted">
+                                <i class="fas fa-comments"></i> <?php echo $post['comment_count']; ?> comments
+                                <i class="fas fa-eye ms-2"></i> <?php echo $post['views']; ?> views
+                            </small>
                         </div>
                     </div>
-                <?php endforeach; ?>
+                </div>
+            <?php endforeach; ?>
+
+            <?php echo get_pagination($page, $posts['pages'], '/?page=%d'); ?>
+        <?php endif; ?>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2 class="h5 mb-0">Categories</h2>
             </div>
-        </div>
-    <?php endif; ?>
-    <div class="posts">
-        <?php foreach($posts as $post): ?>
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h5 class="card-title"><?php echo htmlspecialchars($post['title']); ?></h5>
-                    <h6 class="card-subtitle mb-2 text-muted">
-                        By <?php echo htmlspecialchars($post['username']); ?> on 
-                        <?php echo date('F j, Y', strtotime($post['created_at'])); ?>
-                    </h6>
-                    <p class="card-text">
-                        <?php echo nl2br(htmlspecialchars(substr($post['content'], 0, 200))); ?>...
-                    </p>
-                    <a href="post.php?id=<?php echo $post['id']; ?>" class="card-link">Read More</a>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <?php foreach ($categories as $category): ?>
+                        <a href="/category.php?id=<?php echo $category['id']; ?>" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <?php echo htmlspecialchars($category['name']); ?>
+                            <span class="badge bg-primary rounded-pill"><?php echo $category['post_count']; ?></span>
+                        </a>
+                    <?php endforeach; ?>
                 </div>
             </div>
-        <?php endforeach; ?>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="h5 mb-0">Popular Tags</h2>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2">
+                    <?php foreach ($popular_tags as $tag): ?>
+                        <a href="/tag.php?id=<?php echo $tag['id']; ?>" class="btn btn-sm btn-outline-secondary">
+                            <?php echo htmlspecialchars($tag['name']); ?>
+                            <span class="badge bg-secondary"><?php echo $tag['post_count']; ?></span>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
-<?php include 'layouts/footer.php'; ?>
+<?php
+// Get page footer
+echo get_page_footer();
+?>

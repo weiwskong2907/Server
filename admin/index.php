@@ -3,6 +3,7 @@
 require_once '../includes/config.php';
 require_once '../includes/db.php';
 require_once '../includes/functions.php';
+require_once 'layout.php';
 
 // Check if user is logged in and is an admin
 if (!isset($_SESSION['user_id'])) {
@@ -76,214 +77,216 @@ for ($i = 6; $i >= 0; $i--) {
     $activity_data['comments'][] = $comments_count;
 }
 
-// Include header
-include 'header.php';
+// Get dashboard statistics
+$stats = get_dashboard_stats();
+
+// Get page header
+echo get_admin_header('Dashboard', ['Dashboard' => null]);
+
+// Display alerts
+if (isset($_SESSION['alert'])) {
+    echo get_admin_alert($_SESSION['alert']['type'], $_SESSION['alert']['message']);
+    unset($_SESSION['alert']);
+}
 ?>
 
-<div class="container-fluid py-4">
-    <h1 class="h3 mb-4">Admin Dashboard</h1>
-    
+<div class="row g-4">
     <!-- Statistics Cards -->
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card dashboard-card bg-primary text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="card-title">Total Users</h6>
-                            <h2 class="mb-0"><?php echo $total_users; ?></h2>
-                        </div>
-                        <i class="fas fa-users fa-3x opacity-50"></i>
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-0">Total Users</h6>
+                        <h2 class="mt-2 mb-0"><?php echo number_format($stats['users']); ?></h2>
                     </div>
+                    <i class="fas fa-users fa-2x opacity-50"></i>
                 </div>
-                <div class="card-footer d-flex align-items-center justify-content-between">
-                    <a href="users.php" class="text-white text-decoration-none">View Details</a>
-                    <i class="fas fa-arrow-circle-right"></i>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-4">
-            <div class="card dashboard-card bg-success text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="card-title">Total Posts</h6>
-                            <h2 class="mb-0"><?php echo $total_posts; ?></h2>
-                        </div>
-                        <i class="fas fa-file-alt fa-3x opacity-50"></i>
-                    </div>
-                </div>
-                <div class="card-footer d-flex align-items-center justify-content-between">
-                    <a href="posts.php" class="text-white text-decoration-none">View Details</a>
-                    <i class="fas fa-arrow-circle-right"></i>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-4">
-            <div class="card dashboard-card bg-info text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="card-title">Total Comments</h6>
-                            <h2 class="mb-0"><?php echo $total_comments; ?></h2>
-                        </div>
-                        <i class="fas fa-comments fa-3x opacity-50"></i>
-                    </div>
-                </div>
-                <div class="card-footer d-flex align-items-center justify-content-between">
-                    <a href="comments.php" class="text-white text-decoration-none">View Details</a>
-                    <i class="fas fa-arrow-circle-right"></i>
+                <div class="mt-3">
+                    <small>
+                        <i class="fas fa-clock me-1"></i>
+                        <?php echo $stats['pending_users']; ?> pending
+                    </small>
                 </div>
             </div>
         </div>
     </div>
     
-    <!-- Activity Chart -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="mb-0">Activity Overview (Last 7 Days)</h5>
-        </div>
-        <div class="card-body">
-            <canvas id="activityChart" height="100"></canvas>
-        </div>
-    </div>
-    
-    <div class="row">
-        <!-- Recent Users -->
-        <div class="col-md-6">
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Recent Users</h5>
-                    <a href="users.php" class="btn btn-sm btn-primary">View All</a>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-striped table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Username</th>
-                                    <th>Email</th>
-                                    <th>Role</th>
-                                    <th>Joined Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php if (count($recent_users) > 0): ?>
-                                    <?php foreach ($recent_users as $user): ?>
-                                    <tr>
-                                        <td><?php echo htmlspecialchars($user['username']); ?></td>
-                                        <td><?php echo htmlspecialchars($user['email']); ?></td>
-                                        <td>
-                                        <span class="badge bg-<?php echo isset($user['is_admin']) && $user['is_admin'] == 1 ? 'danger' : 'secondary'; ?>">
-                                        <?php echo ucfirst(htmlspecialchars(isset($user['is_admin']) && $user['is_admin'] == 1 ? 'admin' : 'user')); ?>
-                                    </span>
-                                        </td>
-                                        <td><?php echo date('M d, Y', strtotime($user['created_at'])); ?></td>
-                                    </tr>
-                                    <?php endforeach; ?>
-                                <?php else: ?>
-                                    <tr>
-                                        <td colspan="4" class="text-center">No users found</td>
-                                    </tr>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-0">Total Posts</h6>
+                        <h2 class="mt-2 mb-0"><?php echo number_format($stats['posts']); ?></h2>
                     </div>
+                    <i class="fas fa-file-alt fa-2x opacity-50"></i>
+                </div>
+                <div class="mt-3">
+                    <small>
+                        <i class="fas fa-comments me-1"></i>
+                        <?php echo number_format($stats['comments']); ?> comments
+                    </small>
                 </div>
             </div>
         </div>
-        
-        <!-- Recent Posts -->
-        <div class="col-md-6">
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Recent Posts</h5>
-                    <a href="posts.php" class="btn btn-sm btn-primary">View All</a>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-striped table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Title</th>
-                                    <th>Author</th>
-                                    <th>Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php if (count($recent_posts) > 0): ?>
-                                    <?php foreach ($recent_posts as $post): ?>
-                                    <tr>
-                                        <td>
-                                            <a href="../post.php?id=<?php echo $post['id']; ?>" target="_blank">
-                                                <?php echo htmlspecialchars(substr($post['title'], 0, 30)) . (strlen($post['title']) > 30 ? '...' : ''); ?>
-                                            </a>
-                                        </td>
-                                        <td><?php echo htmlspecialchars($post['username']); ?></td>
-                                        <td><?php echo date('M d, Y', strtotime($post['created_at'])); ?></td>
-                                    </tr>
-                                    <?php endforeach; ?>
-                                <?php else: ?>
-                                    <tr>
-                                        <td colspan="3" class="text-center">No posts found</td>
-                                    </tr>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-0">Categories</h6>
+                        <h2 class="mt-2 mb-0"><?php echo number_format($stats['categories']); ?></h2>
                     </div>
+                    <i class="fas fa-folder fa-2x opacity-50"></i>
+                </div>
+                <div class="mt-3">
+                    <small>
+                        <i class="fas fa-tags me-1"></i>
+                        <?php echo number_format($stats['tags']); ?> tags
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-0">Reports</h6>
+                        <h2 class="mt-2 mb-0"><?php echo number_format($stats['reported_content']); ?></h2>
+                    </div>
+                    <i class="fas fa-flag fa-2x opacity-50"></i>
+                </div>
+                <div class="mt-3">
+                    <small>
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        Need attention
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Activity -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Recent Activity</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Action</th>
+                                <th>Details</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($stats['recent_activities'] as $activity): ?>
+                                <tr>
+                                    <td>
+                                        <a href="/profile.php?id=<?php echo $activity['user_id']; ?>" class="text-decoration-none">
+                                            <?php echo htmlspecialchars($activity['username']); ?>
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-<?php echo get_activity_badge_color($activity['action']); ?>">
+                                            <?php echo format_activity_action($activity['action']); ?>
+                                        </span>
+                                    </td>
+                                    <td><?php echo htmlspecialchars($activity['details']); ?></td>
+                                    <td><?php echo time_ago($activity['created_at']); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="/admin/users.php?filter=pending" class="btn btn-outline-primary">
+                        <i class="fas fa-user-check me-2"></i> Review Pending Users
+                    </a>
+                    <a href="/admin/reports.php" class="btn btn-outline-warning">
+                        <i class="fas fa-flag me-2"></i> Handle Reports
+                    </a>
+                    <a href="/admin/settings.php" class="btn btn-outline-secondary">
+                        <i class="fas fa-cog me-2"></i> System Settings
+                    </a>
+                    <a href="/admin/backup.php" class="btn btn-outline-info">
+                        <i class="fas fa-database me-2"></i> Backup System
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Chart Initialization Script -->
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Activity Chart
-        var ctx = document.getElementById('activityChart').getContext('2d');
-        var activityChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: <?php echo json_encode($labels); ?>,
-                datasets: [{
-                    label: 'Posts',
-                    data: <?php echo json_encode($activity_data['posts']); ?>,
-                    backgroundColor: 'rgba(40, 167, 69, 0.2)',
-                    borderColor: 'rgba(40, 167, 69, 1)',
-                    borderWidth: 2,
-                    tension: 0.3
-                },
-                {
-                    label: 'Comments',
-                    data: <?php echo json_encode($activity_data['comments']); ?>,
-                    backgroundColor: 'rgba(23, 162, 184, 0.2)',
-                    borderColor: 'rgba(23, 162, 184, 1)',
-                    borderWidth: 2,
-                    tension: 0.3
-                }]
+// Initialize charts if needed
+document.addEventListener('DOMContentLoaded', function() {
+    // Activity Chart
+    var ctx = document.getElementById('activityChart').getContext('2d');
+    var activityChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: <?php echo json_encode($labels); ?>,
+            datasets: [{
+                label: 'Posts',
+                data: <?php echo json_encode($activity_data['posts']); ?>,
+                backgroundColor: 'rgba(40, 167, 69, 0.2)',
+                borderColor: 'rgba(40, 167, 69, 1)',
+                borderWidth: 2,
+                tension: 0.3
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            precision: 0
-                        }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        position: 'top',
+            {
+                label: 'Comments',
+                data: <?php echo json_encode($activity_data['comments']); ?>,
+                backgroundColor: 'rgba(23, 162, 184, 0.2)',
+                borderColor: 'rgba(23, 162, 184, 1)',
+                borderWidth: 2,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
                     }
                 }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
             }
-        });
+        }
     });
+});
 </script>
 
-<?php include 'footer.php'; ?>
+<?php
+// Get page footer
+echo get_admin_footer();
+?>
