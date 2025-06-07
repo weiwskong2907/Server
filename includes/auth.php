@@ -3,6 +3,43 @@
  * Authentication helper functions
  */
 
+// Start session if not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+/**
+ * Check if user is logged in
+ * @return bool
+ */
+function is_logged_in() {
+    return isset($_SESSION['user_id']);
+}
+
+/**
+ * Get current user ID
+ * @return int|null
+ */
+function get_current_user_id() {
+    return $_SESSION['user_id'] ?? null;
+}
+
+/**
+ * Get current user role
+ * @return string|null
+ */
+function get_current_user_role() {
+    return $_SESSION['user_role'] ?? null;
+}
+
+/**
+ * Check if user is admin
+ * @return bool
+ */
+function is_admin() {
+    return get_current_user_role() === 'admin';
+}
+
 /**
  * Register new user
  */
@@ -71,52 +108,56 @@ function register_user($username, $email, $password) {
 /**
  * Login user
  */
-function login_user($username, $password) {
-    // Check rate limit
-    if (!check_rate_limit('login_' . $username)) {
-        return ['success' => false, 'message' => 'Too many login attempts. Please try again later.'];
+function login_user($email, $password, $remember = false) {
+    global $conn;
+    
+    $email = mysqli_real_escape_string($conn, $email);
+    $query = "SELECT id, username, password, role, status FROM users WHERE email = '$email'";
+    $result = mysqli_query($conn, $query);
+    
+    if ($result && mysqli_num_rows($result) > 0) {
+        $user = mysqli_fetch_assoc($result);
+        
+        if ($user['status'] !== 'active') {
+            return false;
+        }
+        
+        if (password_verify($password, $user['password'])) {
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['username'] = $user['username'];
+            $_SESSION['user_role'] = $user['role'];
+            
+            if ($remember) {
+                $token = bin2hex(random_bytes(32));
+                $expires = date('Y-m-d H:i:s', strtotime('+30 days'));
+                
+                $query = "INSERT INTO remember_tokens (user_id, token, expires_at) 
+                         VALUES ({$user['id']}, '$token', '$expires')";
+                mysqli_query($conn, $query);
+                
+                setcookie('remember_token', $token, strtotime('+30 days'), '/', '', true, true);
+            }
+            
+            log_activity($user['id'], 'login', 'User logged in');
+            return true;
+        }
     }
     
-    // Get user
-    $user = get_row(
-        "SELECT id, username, password, status, role FROM users WHERE username = ? OR email = ?",
-        "ss",
-        [$username, $username]
-    );
-    
-    if (!$user) {
-        return ['success' => false, 'message' => 'Invalid username or password'];
-    }
-    
-    if ($user['status'] !== 'active') {
-        return ['success' => false, 'message' => 'Account is not active. Please verify your email.'];
-    }
-    
-    if (!password_verify($password, $user['password'])) {
-        return ['success' => false, 'message' => 'Invalid username or password'];
-    }
-    
-    // Set session
-    $_SESSION['user_id'] = $user['id'];
-    $_SESSION['username'] = $user['username'];
-    $_SESSION['user_role'] = $user['role'];
-    
-    // Log activity
-    log_activity($user['id'], 'login', 'user', $user['id'], 'User logged in');
-    
-    return ['success' => true, 'message' => 'Login successful'];
+    return false;
 }
 
 /**
  * Logout user
  */
 function logout_user() {
-    if (isset($_SESSION['user_id'])) {
-        log_activity($_SESSION['user_id'], 'logout', 'user', $_SESSION['user_id'], 'User logged out');
+    if (isset($_COOKIE['remember_token'])) {
+        $token = $_COOKIE['remember_token'];
+        $query = "DELETE FROM remember_tokens WHERE token = '$token'";
+        mysqli_query($conn, $query);
+        setcookie('remember_token', '', time() - 3600, '/', '', true, true);
     }
     
     session_destroy();
-    return ['success' => true, 'message' => 'Logout successful'];
 }
 
 /**
@@ -337,4 +378,53 @@ function change_password($user_id, $current_password, $new_password) {
     log_activity($user_id, 'password_change', 'user', $user_id, 'Password changed');
     
     return ['success' => true, 'message' => 'Password changed successfully'];
+}
+
+/**
+ * Check if email exists
+ * @param string $email
+ * @return bool
+ */
+function email_exists($email) {
+    global $conn;
+    
+    $email = mysqli_real_escape_string($conn, $email);
+    $query = "SELECT id FROM users WHERE email = '$email'";
+    $result = mysqli_query($conn, $query);
+    
+    return mysqli_num_rows($result) > 0;
+}
+
+/**
+ * Check if username exists
+ * @param string $username
+ * @return bool
+ */
+function username_exists($username) {
+    global $conn;
+    
+    $username = mysqli_real_escape_string($conn, $username);
+    $query = "SELECT id FROM users WHERE username = '$username'";
+    $result = mysqli_query($conn, $query);
+    
+    return mysqli_num_rows($result) > 0;
+}
+
+/**
+ * Log user activity
+ * @param int $user_id
+ * @param string $action
+ * @param string $description
+ */
+function log_activity($user_id, $action, $description) {
+    global $conn;
+    
+    $user_id = (int)$user_id;
+    $action = mysqli_real_escape_string($conn, $action);
+    $description = mysqli_real_escape_string($conn, $description);
+    $ip = $_SERVER['REMOTE_ADDR'];
+    
+    $query = "INSERT INTO activity_logs (user_id, action, description, ip_address) 
+              VALUES ($user_id, '$action', '$description', '$ip')";
+    mysqli_query($conn, $query);
 } 
