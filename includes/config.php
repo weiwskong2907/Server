@@ -33,23 +33,23 @@ if (file_exists($envFile)) {
 }
 
 // Database configuration
-define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
-define('DB_NAME', getenv('DB_NAME') ?: 'blog');
+define('DB_HOST', getenv('DB_HOST') ?: 'mysql-db');
+define('DB_NAME', getenv('DB_NAME') ?: 'family_forum');
 define('DB_USER', getenv('DB_USER') ?: 'root');
-define('DB_PASS', getenv('DB_PASS') ?: '');
+define('DB_PASS', getenv('DB_PASS') ?: 'myrootpass');
 
 // Site settings
-define('SITE_NAME', getenv('SITE_NAME') ?: 'My Blog');
-define('SITE_URL', getenv('SITE_URL') ?: 'http://localhost');
-define('ADMIN_EMAIL', getenv('ADMIN_EMAIL') ?: 'admin@example.com');
+define('SITE_NAME', getenv('SITE_NAME') ?: 'Family & Friends Forum');
+define('SITE_URL', getenv('SITE_URL') ?: 'http://localhost/Server');
+define('ADMIN_EMAIL', getenv('ADMIN_EMAIL') ?: 'unknowsuser050@gmail.com');
 
 // SMTP settings
 define('SMTP_HOST', getenv('SMTP_HOST') ?: 'smtp.gmail.com');
 define('SMTP_PORT', getenv('SMTP_PORT') ?: 587);
-define('SMTP_USER', getenv('SMTP_USER') ?: '');
-define('SMTP_PASS', getenv('SMTP_PASS') ?: '');
-define('SMTP_FROM', getenv('SMTP_FROM') ?: 'noreply@example.com');
-define('SMTP_FROM_NAME', getenv('SMTP_FROM_NAME') ?: 'My Blog');
+define('SMTP_USER', getenv('SMTP_USER') ?: 'unknowsuser050@gmail.com');
+define('SMTP_PASS', getenv('SMTP_PASS') ?: 'blts pqzz hpgc hpxt');
+define('SMTP_FROM', getenv('SMTP_FROM') ?: 'unknowsuser050@gmail.com');
+define('SMTP_FROM_NAME', getenv('SMTP_FROM_NAME') ?: 'Family & Friends Forum');
 
 // Security settings
 define('HASH_COST', 12);
