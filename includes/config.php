@@ -1,4 +1,7 @@
 <?php
+// Start session first
+session_start();
+
 // Load environment variables from .env file
 $envFile = __DIR__ . '/../.env';
 if (file_exists($envFile)) {
@@ -46,7 +49,6 @@ ini_set('session.cookie_httponly', 1);
 ini_set('session.cookie_secure', isset($_SERVER['HTTPS']));
 ini_set('session.cookie_samesite', 'Lax');
 ini_set('session.gc_maxlifetime', SESSION_LIFETIME);
-session_start();
 
 // Error reporting
 error_reporting(E_ALL);
