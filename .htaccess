@@ -8,16 +8,13 @@ php_value post_max_size 10M
 php_value max_execution_time 300
 php_value max_input_time 300
 
-# Enable rewrite engine
-RewriteEngine On
-
-# Handle errors
-ErrorDocument 500 /error.php
-ErrorDocument 404 /error.php
-ErrorDocument 403 /error.php
-
 # Set default character set
 AddDefaultCharset UTF-8
 
 # Enable CORS
-Header set Access-Control-Allow-Origin "*" 
+Header set Access-Control-Allow-Origin "*"
+
+# Handle errors
+ErrorDocument 500 /error.php
+ErrorDocument 404 /error.php
+ErrorDocument 403 /error.php 
