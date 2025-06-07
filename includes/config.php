@@ -1,5 +1,11 @@
 <?php
-// Start session first
+// Set session settings before starting the session
+ini_set('session.cookie_httponly', 1);
+ini_set('session.cookie_secure', isset($_SERVER['HTTPS']));
+ini_set('session.cookie_samesite', 'Lax');
+ini_set('session.gc_maxlifetime', 3600); // 1 hour
+
+// Start session
 session_start();
 
 // Define development mode
@@ -49,12 +55,6 @@ define('LOGIN_TIMEOUT', getenv('LOGIN_TIMEOUT') ?: 900); // 15 minutes
 // File upload settings
 define('MAX_FILE_SIZE', getenv('MAX_FILE_SIZE') ?: 5242880); // 5MB
 define('ALLOWED_FILE_TYPES', getenv('ALLOWED_FILE_TYPES') ?: 'jpg,jpeg,png,gif,pdf,doc,docx');
-
-// Session settings
-ini_set('session.cookie_httponly', 1);
-ini_set('session.cookie_secure', isset($_SERVER['HTTPS']));
-ini_set('session.cookie_samesite', 'Lax');
-ini_set('session.gc_maxlifetime', SESSION_LIFETIME);
 
 // Error reporting
 error_reporting(E_ALL);

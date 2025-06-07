@@ -41,38 +41,31 @@ function save_uploaded_file($file) {
     return false;
 }
 
-// Add this function to your existing functions.php
-function log_activity($action_type, $entity_type, $entity_id, $description = '') {
-    global $pdo;
-    
-    $stmt = $pdo->prepare(
-        "INSERT INTO activity_logs (user_id, action_type, entity_type, entity_id, description)
-         VALUES (?, ?, ?, ?, ?)"
-    );
-    
-    return $stmt->execute([
-        isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null,
-        $action_type,
-        $entity_type,
-        $entity_id,
-        $description
-    ]);
-}
-
 function is_admin($user_id) {
-    global $pdo;
-    $stmt = $pdo->prepare("SELECT is_admin FROM users WHERE id = ?");
-    $stmt->execute([$user_id]);
-    return (bool)$stmt->fetchColumn();
+    try {
+        $pdo = get_db_connection();
+        $stmt = $pdo->prepare("SELECT role FROM users WHERE id = ?");
+        $stmt->execute([$user_id]);
+        return $stmt->fetchColumn() === 'admin';
+    } catch (Exception $e) {
+        error_log("Error checking admin status: " . $e->getMessage());
+        return false;
+    }
 }
 
 /**
  * Get username by user ID
  */
-function getUsernameById($pdo, $user_id) {
-    $stmt = $pdo->prepare("SELECT username FROM users WHERE id = ?");
-    $stmt->execute([$user_id]);
-    return $stmt->fetchColumn();
+function getUsernameById($user_id) {
+    try {
+        $pdo = get_db_connection();
+        $stmt = $pdo->prepare("SELECT username FROM users WHERE id = ?");
+        $stmt->execute([$user_id]);
+        return $stmt->fetchColumn();
+    } catch (Exception $e) {
+        error_log("Error getting username: " . $e->getMessage());
+        return null;
+    }
 }
 
 /**
@@ -82,39 +75,46 @@ function getUsernameById($pdo, $user_id) {
  * @return array
  */
 function get_posts_paginated($page = 1, $per_page = 10) {
-    global $conn;
-    
-    $page = max(1, (int)$page);
-    $per_page = max(1, (int)$per_page);
-    $offset = ($page - 1) * $per_page;
-    
-    $query = "SELECT p.*, u.username, c.name as category_name,
-              (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comment_count
-              FROM posts p
-              LEFT JOIN users u ON p.user_id = u.id
-              LEFT JOIN categories c ON p.category_id = c.id
-              WHERE p.status = 'published'
-              ORDER BY p.created_at DESC
-              LIMIT $offset, $per_page";
-    
-    $result = mysqli_query($conn, $query);
-    $posts = [];
-    
-    while ($row = mysqli_fetch_assoc($result)) {
-        $posts[] = $row;
+    try {
+        $pdo = get_db_connection();
+        $page = max(1, (int)$page);
+        $per_page = max(1, (int)$per_page);
+        $offset = ($page - 1) * $per_page;
+        
+        $query = "SELECT p.*, u.username, c.name as category_name,
+                  (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comment_count
+                  FROM posts p
+                  LEFT JOIN users u ON p.user_id = u.id
+                  LEFT JOIN categories c ON p.category_id = c.id
+                  WHERE p.status = 'published'
+                  ORDER BY p.created_at DESC
+                  LIMIT :offset, :per_page";
+        
+        $stmt = $pdo->prepare($query);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->bindValue(':per_page', $per_page, PDO::PARAM_INT);
+        $stmt->execute();
+        $posts = $stmt->fetchAll();
+        
+        // Get total count for pagination
+        $stmt = $pdo->query("SELECT COUNT(*) FROM posts WHERE status = 'published'");
+        $total = $stmt->fetchColumn();
+        
+        return [
+            'posts' => $posts,
+            'total' => $total,
+            'pages' => ceil($total / $per_page),
+            'current_page' => $page
+        ];
+    } catch (Exception $e) {
+        error_log("Error getting paginated posts: " . $e->getMessage());
+        return [
+            'posts' => [],
+            'total' => 0,
+            'pages' => 0,
+            'current_page' => $page
+        ];
     }
-    
-    // Get total count for pagination
-    $query = "SELECT COUNT(*) as total FROM posts WHERE status = 'published'";
-    $result = mysqli_query($conn, $query);
-    $total = mysqli_fetch_assoc($result)['total'];
-    
-    return [
-        'posts' => $posts,
-        'total' => $total,
-        'pages' => ceil($total / $per_page),
-        'current_page' => $page
-    ];
 }
 
 /**
@@ -122,22 +122,20 @@ function get_posts_paginated($page = 1, $per_page = 10) {
  * @return array
  */
 function get_categories() {
-    global $conn;
-    
-    $query = "SELECT c.*, COUNT(p.id) as post_count
-              FROM categories c
-              LEFT JOIN posts p ON c.id = p.category_id AND p.status = 'published'
-              GROUP BY c.id
-              ORDER BY c.name";
-    
-    $result = mysqli_query($conn, $query);
-    $categories = [];
-    
-    while ($row = mysqli_fetch_assoc($result)) {
-        $categories[] = $row;
+    try {
+        $pdo = get_db_connection();
+        $query = "SELECT c.*, COUNT(p.id) as post_count
+                  FROM categories c
+                  LEFT JOIN posts p ON c.id = p.category_id AND p.status = 'published'
+                  GROUP BY c.id
+                  ORDER BY c.name";
+        
+        $stmt = $pdo->query($query);
+        return $stmt->fetchAll();
+    } catch (Exception $e) {
+        error_log("Error getting categories: " . $e->getMessage());
+        return [];
     }
-    
-    return $categories;
 }
 
 /**
@@ -146,25 +144,24 @@ function get_categories() {
  * @return array
  */
 function get_popular_tags($limit = 10) {
-    global $conn;
-    
-    $limit = (int)$limit;
-    $query = "SELECT t.name, COUNT(pt.post_id) as count
-              FROM tags t
-              JOIN post_tags pt ON t.id = pt.tag_id
-              JOIN posts p ON pt.post_id = p.id AND p.status = 'published'
-              GROUP BY t.id
-              ORDER BY count DESC
-              LIMIT $limit";
-    
-    $result = mysqli_query($conn, $query);
-    $tags = [];
-    
-    while ($row = mysqli_fetch_assoc($result)) {
-        $tags[] = $row;
+    try {
+        $pdo = get_db_connection();
+        $query = "SELECT t.name, COUNT(pt.post_id) as count
+                  FROM tags t
+                  JOIN post_tags pt ON t.id = pt.tag_id
+                  JOIN posts p ON pt.post_id = p.id AND p.status = 'published'
+                  GROUP BY t.id
+                  ORDER BY count DESC
+                  LIMIT :limit";
+        
+        $stmt = $pdo->prepare($query);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    } catch (Exception $e) {
+        error_log("Error getting popular tags: " . $e->getMessage());
+        return [];
     }
-    
-    return $tags;
 }
 
 /**
@@ -173,38 +170,37 @@ function get_popular_tags($limit = 10) {
  * @return array|null
  */
 function get_post($post_id) {
-    global $conn;
-    
-    $post_id = (int)$post_id;
-    $query = "SELECT p.*, u.username, c.name as category_name
-              FROM posts p
-              LEFT JOIN users u ON p.user_id = u.id
-              LEFT JOIN categories c ON p.category_id = c.id
-              WHERE p.id = $post_id AND p.status = 'published'";
-    
-    $result = mysqli_query($conn, $query);
-    
-    if ($result && mysqli_num_rows($result) > 0) {
-        $post = mysqli_fetch_assoc($result);
+    try {
+        $pdo = get_db_connection();
+        $query = "SELECT p.*, u.username, c.name as category_name
+                  FROM posts p
+                  LEFT JOIN users u ON p.user_id = u.id
+                  LEFT JOIN categories c ON p.category_id = c.id
+                  WHERE p.id = :post_id AND p.status = 'published'";
         
-        // Get tags
-        $query = "SELECT t.name
-                 FROM tags t
-                 JOIN post_tags pt ON t.id = pt.tag_id
-                 WHERE pt.post_id = $post_id";
+        $stmt = $pdo->prepare($query);
+        $stmt->bindValue(':post_id', $post_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $post = $stmt->fetch();
         
-        $result = mysqli_query($conn, $query);
-        $tags = [];
-        
-        while ($row = mysqli_fetch_assoc($result)) {
-            $tags[] = $row['name'];
+        if ($post) {
+            // Get tags
+            $query = "SELECT t.name
+                     FROM tags t
+                     JOIN post_tags pt ON t.id = pt.tag_id
+                     WHERE pt.post_id = :post_id";
+            
+            $stmt = $pdo->prepare($query);
+            $stmt->bindValue(':post_id', $post_id, PDO::PARAM_INT);
+            $stmt->execute();
+            $post['tags'] = $stmt->fetchAll(PDO::FETCH_COLUMN);
         }
         
-        $post['tags'] = $tags;
         return $post;
+    } catch (Exception $e) {
+        error_log("Error getting post: " . $e->getMessage());
+        return null;
     }
-    
-    return null;
 }
 
 /**
@@ -214,46 +210,26 @@ function get_post($post_id) {
  * @return array
  */
 function get_related_posts($post_id, $limit = 3) {
-    global $conn;
-    
-    $post_id = (int)$post_id;
-    $limit = (int)$limit;
-    
-    // Get post's category and tags
-    $query = "SELECT p.category_id, GROUP_CONCAT(t.id) as tag_ids
-              FROM posts p
-              LEFT JOIN post_tags pt ON p.id = pt.post_id
-              LEFT JOIN tags t ON pt.tag_id = t.id
-              WHERE p.id = $post_id
-              GROUP BY p.id";
-    
-    $result = mysqli_query($conn, $query);
-    $post = mysqli_fetch_assoc($result);
-    
-    if (!$post) {
+    try {
+        $pdo = get_db_connection();
+        $query = "SELECT p.*, u.username
+                  FROM posts p
+                  LEFT JOIN users u ON p.user_id = u.id
+                  WHERE p.id != :post_id 
+                  AND p.status = 'published'
+                  AND p.category_id = (SELECT category_id FROM posts WHERE id = :post_id)
+                  ORDER BY p.created_at DESC
+                  LIMIT :limit";
+        
+        $stmt = $pdo->prepare($query);
+        $stmt->bindValue(':post_id', $post_id, PDO::PARAM_INT);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    } catch (Exception $e) {
+        error_log("Error getting related posts: " . $e->getMessage());
         return [];
     }
-    
-    // Get related posts by category and tags
-    $query = "SELECT DISTINCT p.*, u.username
-              FROM posts p
-              LEFT JOIN users u ON p.user_id = u.id
-              LEFT JOIN post_tags pt ON p.id = pt.post_id
-              WHERE p.id != $post_id
-              AND p.status = 'published'
-              AND (p.category_id = {$post['category_id']}
-                   OR pt.tag_id IN ({$post['tag_ids']}))
-              ORDER BY p.created_at DESC
-              LIMIT $limit";
-    
-    $result = mysqli_query($conn, $query);
-    $posts = [];
-    
-    while ($row = mysqli_fetch_assoc($result)) {
-        $posts[] = $row;
-    }
-    
-    return $posts;
 }
 
 /**
@@ -264,41 +240,47 @@ function get_related_posts($post_id, $limit = 3) {
  * @return array
  */
 function get_comments_paginated($post_id, $page = 1, $per_page = 10) {
-    global $conn;
-    
-    $post_id = (int)$post_id;
-    $page = max(1, (int)$page);
-    $per_page = max(1, (int)$per_page);
-    $offset = ($page - 1) * $per_page;
-    
-    $query = "SELECT c.*, u.username
-              FROM comments c
-              LEFT JOIN users u ON c.user_id = u.id
-              WHERE c.post_id = $post_id AND c.status = 'approved'
-              ORDER BY c.created_at DESC
-              LIMIT $offset, $per_page";
-    
-    $result = mysqli_query($conn, $query);
-    $comments = [];
-    
-    while ($row = mysqli_fetch_assoc($result)) {
-        $comments[] = $row;
+    try {
+        $pdo = get_db_connection();
+        $page = max(1, (int)$page);
+        $per_page = max(1, (int)$per_page);
+        $offset = ($page - 1) * $per_page;
+        
+        $query = "SELECT c.*, u.username
+                  FROM comments c
+                  LEFT JOIN users u ON c.user_id = u.id
+                  WHERE c.post_id = :post_id
+                  ORDER BY c.created_at DESC
+                  LIMIT :offset, :per_page";
+        
+        $stmt = $pdo->prepare($query);
+        $stmt->bindValue(':post_id', $post_id, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->bindValue(':per_page', $per_page, PDO::PARAM_INT);
+        $stmt->execute();
+        $comments = $stmt->fetchAll();
+        
+        // Get total count for pagination
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM comments WHERE post_id = :post_id");
+        $stmt->bindValue(':post_id', $post_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $total = $stmt->fetchColumn();
+        
+        return [
+            'comments' => $comments,
+            'total' => $total,
+            'pages' => ceil($total / $per_page),
+            'current_page' => $page
+        ];
+    } catch (Exception $e) {
+        error_log("Error getting paginated comments: " . $e->getMessage());
+        return [
+            'comments' => [],
+            'total' => 0,
+            'pages' => 0,
+            'current_page' => $page
+        ];
     }
-    
-    // Get total count for pagination
-    $query = "SELECT COUNT(*) as total
-              FROM comments
-              WHERE post_id = $post_id AND status = 'approved'";
-    
-    $result = mysqli_query($conn, $query);
-    $total = mysqli_fetch_assoc($result)['total'];
-    
-    return [
-        'comments' => $comments,
-        'total' => $total,
-        'pages' => ceil($total / $per_page),
-        'current_page' => $page
-    ];
 }
 
 /**
@@ -306,11 +288,15 @@ function get_comments_paginated($post_id, $page = 1, $per_page = 10) {
  * @param int $post_id
  */
 function increment_post_views($post_id) {
-    global $conn;
-    
-    $post_id = (int)$post_id;
-    $query = "UPDATE posts SET views = views + 1 WHERE id = $post_id";
-    mysqli_query($conn, $query);
+    try {
+        $pdo = get_db_connection();
+        $query = "UPDATE posts SET views = views + 1 WHERE id = :post_id";
+        $stmt = $pdo->prepare($query);
+        $stmt->bindValue(':post_id', $post_id, PDO::PARAM_INT);
+        $stmt->execute();
+    } catch (Exception $e) {
+        error_log("Error incrementing post views: " . $e->getMessage());
+    }
 }
 
 /**
@@ -319,7 +305,7 @@ function increment_post_views($post_id) {
  * @return string
  */
 function format_date($date) {
-    return date('F j, Y g:i a', strtotime($date));
+    return date('F j, Y', strtotime($date));
 }
 
 /**
@@ -332,7 +318,6 @@ function truncate_text($text, $length = 200) {
     if (strlen($text) <= $length) {
         return $text;
     }
-    
     return substr($text, 0, $length) . '...';
 }
 
@@ -342,16 +327,13 @@ function truncate_text($text, $length = 200) {
  * @return string
  */
 function generate_slug($text) {
-    // Convert to lowercase
-    $text = strtolower($text);
-    
-    // Replace non-alphanumeric characters with hyphens
-    $text = preg_replace('/[^a-z0-9]+/', '-', $text);
-    
-    // Remove leading/trailing hyphens
+    $text = preg_replace('~[^\pL\d]+~u', '-', $text);
+    $text = iconv('utf-8', 'us-ascii//TRANSLIT', $text);
+    $text = preg_replace('~[^-\w]+~', '', $text);
     $text = trim($text, '-');
-    
-    return $text;
+    $text = preg_replace('~-+~', '-', $text);
+    $text = strtolower($text);
+    return $text ?: 'n-a';
 }
 
 /**
