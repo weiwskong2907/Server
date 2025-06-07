@@ -9,22 +9,6 @@ if (!defined('SECURE_ACCESS')) {
 }
 
 /**
- * Check if user is admin
- * @param int $userId
- * @return bool
- */
-function is_admin($userId) {
-    try {
-        $sql = "SELECT role FROM users WHERE id = ?";
-        $result = db_query_one($sql, [$userId]);
-        return $result && $result['role'] === 'admin';
-    } catch (Exception $e) {
-        error_log("Error checking admin status: " . $e->getMessage());
-        return false;
-    }
-}
-
-/**
  * Get username by ID
  * @param int $userId
  * @return string
