@@ -2,6 +2,12 @@
 // Start session first
 session_start();
 
+// Define development mode
+define('DEVELOPMENT_MODE', true);
+
+// Include error handler
+require_once __DIR__ . '/error_handler.php';
+
 // Load environment variables from .env file
 $envFile = __DIR__ . '/../.env';
 if (file_exists($envFile)) {
@@ -58,6 +64,6 @@ ini_set('error_log', __DIR__ . '/../logs/error.log');
 
 // Create logs directory if it doesn't exist
 if (!file_exists(__DIR__ . '/../logs')) {
-    mkdir(__DIR__ . '/../logs', 0777, true);
+    mkdir(__DIR__ . '/../logs', 0775, true);
 }
 ?>
