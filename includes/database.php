@@ -1,7 +1,138 @@
 <?php
 /**
- * Database helper functions
+ * Database connection and utility functions
  */
+
+// Prevent direct access
+if (!defined('SECURE_ACCESS')) {
+    die('Direct access not permitted');
+}
+
+/**
+ * Get database connection
+ * @return PDO
+ */
+function get_db_connection() {
+    static $pdo = null;
+    
+    if ($pdo === null) {
+        try {
+            $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4";
+            $options = [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES => false,
+            ];
+            $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
+        } catch (PDOException $e) {
+            error_log("Database connection failed: " . $e->getMessage());
+            throw new Exception("Database connection failed");
+        }
+    }
+    
+    return $pdo;
+}
+
+/**
+ * Execute a query and return all results
+ * @param string $sql
+ * @param array $params
+ * @return array
+ */
+function db_query($sql, $params = []) {
+    try {
+        $stmt = get_db_connection()->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll();
+    } catch (PDOException $e) {
+        error_log("Query failed: " . $e->getMessage());
+        throw new Exception("Database query failed");
+    }
+}
+
+/**
+ * Execute a query and return single result
+ * @param string $sql
+ * @param array $params
+ * @return array|false
+ */
+function db_query_one($sql, $params = []) {
+    try {
+        $stmt = get_db_connection()->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetch();
+    } catch (PDOException $e) {
+        error_log("Query failed: " . $e->getMessage());
+        throw new Exception("Database query failed");
+    }
+}
+
+/**
+ * Insert data into a table
+ * @param string $table
+ * @param array $data
+ * @return int
+ */
+function db_insert($table, $data) {
+    try {
+        $fields = array_keys($data);
+        $placeholders = array_fill(0, count($fields), '?');
+        
+        $sql = "INSERT INTO {$table} (" . implode(', ', $fields) . ") 
+                VALUES (" . implode(', ', $placeholders) . ")";
+        
+        $stmt = get_db_connection()->prepare($sql);
+        $stmt->execute(array_values($data));
+        return get_db_connection()->lastInsertId();
+    } catch (PDOException $e) {
+        error_log("Insert failed: " . $e->getMessage());
+        throw new Exception("Database insert failed");
+    }
+}
+
+/**
+ * Update data in a table
+ * @param string $table
+ * @param array $data
+ * @param string $where
+ * @param array $whereParams
+ * @return int
+ */
+function db_update($table, $data, $where, $whereParams = []) {
+    try {
+        $fields = array_map(function($field) {
+            return "{$field} = ?";
+        }, array_keys($data));
+        
+        $sql = "UPDATE {$table} SET " . implode(', ', $fields) . " WHERE {$where}";
+        
+        $stmt = get_db_connection()->prepare($sql);
+        $stmt->execute(array_merge(array_values($data), $whereParams));
+        return $stmt->rowCount();
+    } catch (PDOException $e) {
+        error_log("Update failed: " . $e->getMessage());
+        throw new Exception("Database update failed");
+    }
+}
+
+/**
+ * Delete data from a table
+ * @param string $table
+ * @param string $where
+ * @param array $params
+ * @return int
+ */
+function db_delete($table, $where, $params = []) {
+    try {
+        $sql = "DELETE FROM {$table} WHERE {$where}";
+        $stmt = get_db_connection()->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->rowCount();
+    } catch (PDOException $e) {
+        error_log("Delete failed: " . $e->getMessage());
+        throw new Exception("Database delete failed");
+    }
+}
 
 $conn = null;
 
@@ -217,93 +348,5 @@ function close_db() {
     if ($conn !== null) {
         $conn->close();
         $conn = null;
-    }
-}
-
-// Database connection function
-function get_db_connection() {
-    static $pdo = null;
-    
-    if ($pdo === null) {
-        try {
-            $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4";
-            $options = [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES => false,
-            ];
-            
-            $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
-        } catch (PDOException $e) {
-            error_log("Database connection failed: " . $e->getMessage());
-            throw new Exception("Database connection failed. Please try again later.");
-        }
-    }
-    
-    return $pdo;
-}
-
-// Function to execute a query and return all results
-function db_query($sql, $params = []) {
-    try {
-        $pdo = get_db_connection();
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute($params);
-        return $stmt->fetchAll();
-    } catch (PDOException $e) {
-        error_log("Query failed: " . $e->getMessage());
-        throw new Exception("Database query failed. Please try again later.");
-    }
-}
-
-// Function to execute a query and return a single result
-function db_query_one($sql, $params = []) {
-    try {
-        $pdo = get_db_connection();
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute($params);
-        return $stmt->fetch();
-    } catch (PDOException $e) {
-        error_log("Query failed: " . $e->getMessage());
-        throw new Exception("Database query failed. Please try again later.");
-    }
-}
-
-// Function to execute an insert query and return the last insert ID
-function db_insert($sql, $params = []) {
-    try {
-        $pdo = get_db_connection();
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute($params);
-        return $pdo->lastInsertId();
-    } catch (PDOException $e) {
-        error_log("Insert failed: " . $e->getMessage());
-        throw new Exception("Database insert failed. Please try again later.");
-    }
-}
-
-// Function to execute an update query and return the number of affected rows
-function db_update($sql, $params = []) {
-    try {
-        $pdo = get_db_connection();
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute($params);
-        return $stmt->rowCount();
-    } catch (PDOException $e) {
-        error_log("Update failed: " . $e->getMessage());
-        throw new Exception("Database update failed. Please try again later.");
-    }
-}
-
-// Function to execute a delete query and return the number of affected rows
-function db_delete($sql, $params = []) {
-    try {
-        $pdo = get_db_connection();
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute($params);
-        return $stmt->rowCount();
-    } catch (PDOException $e) {
-        error_log("Delete failed: " . $e->getMessage());
-        throw new Exception("Database delete failed. Please try again later.");
     }
 } 

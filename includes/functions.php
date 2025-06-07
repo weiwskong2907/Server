@@ -1,52 +1,23 @@
 <?php
-// File upload handling functions
-function get_allowed_file_types() {
-    return [
-        'image/jpeg' => 'jpg',
-        'image/png' => 'png',
-        'image/gif' => 'gif',
-        'application/pdf' => 'pdf',
-        'application/msword' => 'doc',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx'
-    ];
+/**
+ * General utility functions
+ */
+
+// Prevent direct access
+if (!defined('SECURE_ACCESS')) {
+    die('Direct access not permitted');
 }
 
-function validate_file_upload($file) {
-    $allowed_types = get_allowed_file_types();
-    $max_size = 5 * 1024 * 1024; // 5MB
-    $errors = [];
-    
-    if ($file['size'] > $max_size) {
-        $errors[] = "File size must be less than 5MB";
-    }
-    
-    if (!isset($allowed_types[$file['type']])) {
-        $errors[] = "File type not allowed. Allowed types: JPG, PNG, GIF, PDF, DOC, DOCX";
-    }
-    
-    return $errors;
-}
-
-function save_uploaded_file($file) {
-    $allowed_types = get_allowed_file_types();
-    $extension = $allowed_types[$file['type']];
-    $filename = uniqid() . '.' . $extension;
-    $upload_path = __DIR__ . '/../uploads/' . $filename;
-    error_log("Attempting to save file to: " . $upload_path);
-    
-    if (move_uploaded_file($file['tmp_name'], $upload_path)) {
-        return $filename;
-    }
-    
-    return false;
-}
-
-function is_admin($user_id) {
+/**
+ * Check if user is admin
+ * @param int $userId
+ * @return bool
+ */
+function is_admin($userId) {
     try {
-        $pdo = get_db_connection();
-        $stmt = $pdo->prepare("SELECT role FROM users WHERE id = ?");
-        $stmt->execute([$user_id]);
-        return $stmt->fetchColumn() === 'admin';
+        $sql = "SELECT role FROM users WHERE id = ?";
+        $result = db_query_one($sql, [$userId]);
+        return $result && $result['role'] === 'admin';
     } catch (Exception $e) {
         error_log("Error checking admin status: " . $e->getMessage());
         return false;
@@ -54,84 +25,52 @@ function is_admin($user_id) {
 }
 
 /**
- * Get username by user ID
+ * Get username by ID
+ * @param int $userId
+ * @return string
  */
-function getUsernameById($user_id) {
+function getUsernameById($userId) {
     try {
-        $pdo = get_db_connection();
-        $stmt = $pdo->prepare("SELECT username FROM users WHERE id = ?");
-        $stmt->execute([$user_id]);
-        return $stmt->fetchColumn();
+        $sql = "SELECT username FROM users WHERE id = ?";
+        $result = db_query_one($sql, [$userId]);
+        return $result ? $result['username'] : 'Unknown User';
     } catch (Exception $e) {
         error_log("Error getting username: " . $e->getMessage());
-        return null;
+        return 'Unknown User';
     }
 }
 
 /**
  * Get paginated posts
  * @param int $page
- * @param int $per_page
+ * @param int $perPage
  * @return array
  */
-function get_posts_paginated($page = 1, $per_page = 10) {
+function get_posts_paginated($page = 1, $perPage = 10) {
     try {
-        $pdo = get_db_connection();
-        $page = max(1, (int)$page);
-        $per_page = max(1, (int)$per_page);
-        $offset = ($page - 1) * $per_page;
-        
-        $query = "SELECT p.*, u.username, c.name as category_name,
-                  (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comment_count
-                  FROM posts p
-                  LEFT JOIN users u ON p.user_id = u.id
-                  LEFT JOIN categories c ON p.category_id = c.id
-                  WHERE p.status = 'published'
-                  ORDER BY p.created_at DESC
-                  LIMIT :offset, :per_page";
-        
-        $stmt = $pdo->prepare($query);
-        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-        $stmt->bindValue(':per_page', $per_page, PDO::PARAM_INT);
-        $stmt->execute();
-        $posts = $stmt->fetchAll();
-        
-        // Get total count for pagination
-        $stmt = $pdo->query("SELECT COUNT(*) FROM posts WHERE status = 'published'");
-        $total = $stmt->fetchColumn();
-        
-        return [
-            'posts' => $posts,
-            'total' => $total,
-            'pages' => ceil($total / $per_page),
-            'current_page' => $page
-        ];
+        $offset = ($page - 1) * $perPage;
+        $sql = "SELECT p.*, u.username, c.name as category_name 
+                FROM posts p 
+                LEFT JOIN users u ON p.user_id = u.id 
+                LEFT JOIN categories c ON p.category_id = c.id 
+                WHERE p.status = 'published' 
+                ORDER BY p.created_at DESC 
+                LIMIT ? OFFSET ?";
+        return db_query($sql, [$perPage, $offset]);
     } catch (Exception $e) {
         error_log("Error getting paginated posts: " . $e->getMessage());
-        return [
-            'posts' => [],
-            'total' => 0,
-            'pages' => 0,
-            'current_page' => $page
-        ];
+        return [];
     }
 }
 
 /**
- * Get categories
+ * Get all categories
  * @return array
  */
 function get_categories() {
     try {
-        $pdo = get_db_connection();
-        $query = "SELECT c.*, COUNT(p.id) as post_count
-                  FROM categories c
-                  LEFT JOIN posts p ON c.id = p.category_id AND p.status = 'published'
-                  GROUP BY c.id
-                  ORDER BY c.name";
-        
-        $stmt = $pdo->query($query);
-        return $stmt->fetchAll();
+        $sql = "SELECT * FROM categories ORDER BY name ASC";
+        return db_query($sql);
     } catch (Exception $e) {
         error_log("Error getting categories: " . $e->getMessage());
         return [];
@@ -145,19 +84,13 @@ function get_categories() {
  */
 function get_popular_tags($limit = 10) {
     try {
-        $pdo = get_db_connection();
-        $query = "SELECT t.name, COUNT(pt.post_id) as count
-                  FROM tags t
-                  JOIN post_tags pt ON t.id = pt.tag_id
-                  JOIN posts p ON pt.post_id = p.id AND p.status = 'published'
-                  GROUP BY t.id
-                  ORDER BY count DESC
-                  LIMIT :limit";
-        
-        $stmt = $pdo->prepare($query);
-        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-        $stmt->execute();
-        return $stmt->fetchAll();
+        $sql = "SELECT t.*, COUNT(pt.post_id) as post_count 
+                FROM tags t 
+                LEFT JOIN post_tags pt ON t.id = pt.tag_id 
+                GROUP BY t.id 
+                ORDER BY post_count DESC 
+                LIMIT ?";
+        return db_query($sql, [$limit]);
     } catch (Exception $e) {
         error_log("Error getting popular tags: " . $e->getMessage());
         return [];
@@ -165,67 +98,39 @@ function get_popular_tags($limit = 10) {
 }
 
 /**
- * Get post by ID
- * @param int $post_id
- * @return array|null
+ * Get single post with related data
+ * @param int $postId
+ * @return array|false
  */
-function get_post($post_id) {
+function get_post($postId) {
     try {
-        $pdo = get_db_connection();
-        $query = "SELECT p.*, u.username, c.name as category_name
-                  FROM posts p
-                  LEFT JOIN users u ON p.user_id = u.id
-                  LEFT JOIN categories c ON p.category_id = c.id
-                  WHERE p.id = :post_id AND p.status = 'published'";
-        
-        $stmt = $pdo->prepare($query);
-        $stmt->bindValue(':post_id', $post_id, PDO::PARAM_INT);
-        $stmt->execute();
-        $post = $stmt->fetch();
-        
-        if ($post) {
-            // Get tags
-            $query = "SELECT t.name
-                     FROM tags t
-                     JOIN post_tags pt ON t.id = pt.tag_id
-                     WHERE pt.post_id = :post_id";
-            
-            $stmt = $pdo->prepare($query);
-            $stmt->bindValue(':post_id', $post_id, PDO::PARAM_INT);
-            $stmt->execute();
-            $post['tags'] = $stmt->fetchAll(PDO::FETCH_COLUMN);
-        }
-        
-        return $post;
+        $sql = "SELECT p.*, u.username, c.name as category_name 
+                FROM posts p 
+                LEFT JOIN users u ON p.user_id = u.id 
+                LEFT JOIN categories c ON p.category_id = c.id 
+                WHERE p.id = ? AND p.status = 'published'";
+        return db_query_one($sql, [$postId]);
     } catch (Exception $e) {
         error_log("Error getting post: " . $e->getMessage());
-        return null;
+        return false;
     }
 }
 
 /**
  * Get related posts
- * @param int $post_id
+ * @param int $postId
  * @param int $limit
  * @return array
  */
-function get_related_posts($post_id, $limit = 3) {
+function get_related_posts($postId, $limit = 3) {
     try {
-        $pdo = get_db_connection();
-        $query = "SELECT p.*, u.username
-                  FROM posts p
-                  LEFT JOIN users u ON p.user_id = u.id
-                  WHERE p.id != :post_id 
-                  AND p.status = 'published'
-                  AND p.category_id = (SELECT category_id FROM posts WHERE id = :post_id)
-                  ORDER BY p.created_at DESC
-                  LIMIT :limit";
-        
-        $stmt = $pdo->prepare($query);
-        $stmt->bindValue(':post_id', $post_id, PDO::PARAM_INT);
-        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-        $stmt->execute();
-        return $stmt->fetchAll();
+        $sql = "SELECT p.*, u.username 
+                FROM posts p 
+                LEFT JOIN users u ON p.user_id = u.id 
+                WHERE p.id != ? AND p.status = 'published' 
+                ORDER BY RAND() 
+                LIMIT ?";
+        return db_query($sql, [$postId, $limit]);
     } catch (Exception $e) {
         error_log("Error getting related posts: " . $e->getMessage());
         return [];
@@ -234,68 +139,39 @@ function get_related_posts($post_id, $limit = 3) {
 
 /**
  * Get paginated comments
- * @param int $post_id
+ * @param int $postId
  * @param int $page
- * @param int $per_page
+ * @param int $perPage
  * @return array
  */
-function get_comments_paginated($post_id, $page = 1, $per_page = 10) {
+function get_comments_paginated($postId, $page = 1, $perPage = 10) {
     try {
-        $pdo = get_db_connection();
-        $page = max(1, (int)$page);
-        $per_page = max(1, (int)$per_page);
-        $offset = ($page - 1) * $per_page;
-        
-        $query = "SELECT c.*, u.username
-                  FROM comments c
-                  LEFT JOIN users u ON c.user_id = u.id
-                  WHERE c.post_id = :post_id
-                  ORDER BY c.created_at DESC
-                  LIMIT :offset, :per_page";
-        
-        $stmt = $pdo->prepare($query);
-        $stmt->bindValue(':post_id', $post_id, PDO::PARAM_INT);
-        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-        $stmt->bindValue(':per_page', $per_page, PDO::PARAM_INT);
-        $stmt->execute();
-        $comments = $stmt->fetchAll();
-        
-        // Get total count for pagination
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM comments WHERE post_id = :post_id");
-        $stmt->bindValue(':post_id', $post_id, PDO::PARAM_INT);
-        $stmt->execute();
-        $total = $stmt->fetchColumn();
-        
-        return [
-            'comments' => $comments,
-            'total' => $total,
-            'pages' => ceil($total / $per_page),
-            'current_page' => $page
-        ];
+        $offset = ($page - 1) * $perPage;
+        $sql = "SELECT c.*, u.username 
+                FROM comments c 
+                LEFT JOIN users u ON c.user_id = u.id 
+                WHERE c.post_id = ? AND c.status = 'approved' 
+                ORDER BY c.created_at DESC 
+                LIMIT ? OFFSET ?";
+        return db_query($sql, [$postId, $perPage, $offset]);
     } catch (Exception $e) {
         error_log("Error getting paginated comments: " . $e->getMessage());
-        return [
-            'comments' => [],
-            'total' => 0,
-            'pages' => 0,
-            'current_page' => $page
-        ];
+        return [];
     }
 }
 
 /**
  * Increment post views
- * @param int $post_id
+ * @param int $postId
+ * @return bool
  */
-function increment_post_views($post_id) {
+function increment_post_views($postId) {
     try {
-        $pdo = get_db_connection();
-        $query = "UPDATE posts SET views = views + 1 WHERE id = :post_id";
-        $stmt = $pdo->prepare($query);
-        $stmt->bindValue(':post_id', $post_id, PDO::PARAM_INT);
-        $stmt->execute();
+        $sql = "UPDATE posts SET views = views + 1 WHERE id = ?";
+        return db_update('posts', ['views' => 'views + 1'], 'id = ?', [$postId]) > 0;
     } catch (Exception $e) {
         error_log("Error incrementing post views: " . $e->getMessage());
+        return false;
     }
 }
 
@@ -309,39 +185,69 @@ function format_date($date) {
 }
 
 /**
- * Truncate text
- * @param string $text
- * @param int $length
+ * Generate slug from title
+ * @param string $title
  * @return string
  */
-function truncate_text($text, $length = 200) {
-    if (strlen($text) <= $length) {
-        return $text;
+function generate_slug($title) {
+    $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title)));
+    return $slug;
+}
+
+/**
+ * Handle file upload
+ * @param array $file
+ * @param string $destination
+ * @return string|false
+ */
+function handle_file_upload($file, $destination) {
+    try {
+        if (!isset($file['error']) || is_array($file['error'])) {
+            throw new Exception('Invalid file parameters');
+        }
+
+        switch ($file['error']) {
+            case UPLOAD_ERR_OK:
+                break;
+            case UPLOAD_ERR_INI_SIZE:
+            case UPLOAD_ERR_FORM_SIZE:
+                throw new Exception('File too large');
+            case UPLOAD_ERR_PARTIAL:
+                throw new Exception('File upload incomplete');
+            case UPLOAD_ERR_NO_FILE:
+                throw new Exception('No file uploaded');
+            case UPLOAD_ERR_NO_TMP_DIR:
+                throw new Exception('Missing temporary folder');
+            case UPLOAD_ERR_CANT_WRITE:
+                throw new Exception('Failed to write file');
+            case UPLOAD_ERR_EXTENSION:
+                throw new Exception('File upload stopped by extension');
+            default:
+                throw new Exception('Unknown upload error');
+        }
+
+        if ($file['size'] > MAX_FILE_SIZE) {
+            throw new Exception('File too large');
+        }
+
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $mime_type = $finfo->file($file['tmp_name']);
+
+        if (!in_array($mime_type, ALLOWED_FILE_TYPES)) {
+            throw new Exception('Invalid file type');
+        }
+
+        $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $filename = uniqid() . '.' . $extension;
+        $filepath = $destination . '/' . $filename;
+
+        if (!move_uploaded_file($file['tmp_name'], $filepath)) {
+            throw new Exception('Failed to move uploaded file');
+        }
+
+        return $filename;
+    } catch (Exception $e) {
+        error_log("File upload error: " . $e->getMessage());
+        return false;
     }
-    return substr($text, 0, $length) . '...';
 }
-
-/**
- * Generate slug
- * @param string $text
- * @return string
- */
-function generate_slug($text) {
-    $text = preg_replace('~[^\pL\d]+~u', '-', $text);
-    $text = iconv('utf-8', 'us-ascii//TRANSLIT', $text);
-    $text = preg_replace('~[^-\w]+~', '', $text);
-    $text = trim($text, '-');
-    $text = preg_replace('~-+~', '-', $text);
-    $text = strtolower($text);
-    return $text ?: 'n-a';
-}
-
-/**
- * Sanitize output
- * @param string $text
- * @return string
- */
-function sanitize_output($text) {
-    return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
-}
-?>
