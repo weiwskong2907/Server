@@ -12,18 +12,35 @@ $error = '';
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = $_POST['email'] ?? '';
+    $email_or_username = $_POST['email_or_username'] ?? '';
     $password = $_POST['password'] ?? '';
     $remember = isset($_POST['remember']);
     
     // Validate input
-    if (empty($email) || empty($password)) {
+    if (empty($email_or_username) || empty($password)) {
         $error = 'Please fill in all fields';
     } else {
         // Attempt login
-        $result = login_user($email, $password, $remember);
+        $result = login_user($email_or_username, $password);
         
         if ($result['success']) {
+            // Set remember me cookie if requested
+            if ($remember) {
+                $token = bin2hex(random_bytes(32));
+                $expires = time() + (30 * 24 * 60 * 60); // 30 days
+                
+                // Store token in database
+                $token_data = [
+                    'user_id' => $_SESSION['user_id'],
+                    'token' => $token,
+                    'expires_at' => date('Y-m-d H:i:s', $expires)
+                ];
+                insert_data('remember_tokens', $token_data);
+                
+                // Set cookie
+                setcookie('remember_token', $token, $expires, '/', '', true, true);
+            }
+            
             // Redirect to intended page or home
             $redirect = $_SESSION['redirect_after_login'] ?? '/';
             unset($_SESSION['redirect_after_login']);
@@ -52,18 +69,21 @@ if ($error) {
                 
                 <form method="POST" action="/login.php">
                     <div class="mb-3">
-                        <label for="email" class="form-label">Email address</label>
-                        <input type="email" class="form-control" id="email" name="email" required 
-                               value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
+                        <label for="email_or_username" class="form-label">Email or Username</label>
+                        <input type="text" class="form-control" id="email_or_username" 
+                               name="email_or_username" required 
+                               value="<?php echo htmlspecialchars($_POST['email_or_username'] ?? ''); ?>">
                     </div>
                     
                     <div class="mb-3">
                         <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password" name="password" required>
+                        <input type="password" class="form-control" id="password" 
+                               name="password" required>
                     </div>
                     
                     <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="remember" name="remember">
+                        <input type="checkbox" class="form-check-input" id="remember" 
+                               name="remember">
                         <label class="form-check-label" for="remember">Remember me</label>
                     </div>
                     
@@ -79,7 +99,9 @@ if ($error) {
                 <hr>
                 
                 <div class="text-center">
-                    <p class="mb-0">Don't have an account? <a href="/register.php" class="text-decoration-none">Register</a></p>
+                    <p class="mb-0">Don't have an account? 
+                        <a href="/register.php" class="text-decoration-none">Register</a>
+                    </p>
                 </div>
             </div>
         </div>
