@@ -11,9 +11,6 @@ php_value max_input_time 300
 # Set default character set
 AddDefaultCharset UTF-8
 
-# Enable CORS
-Header set Access-Control-Allow-Origin "*"
-
 # Handle errors
 ErrorDocument 500 /error.php
 ErrorDocument 404 /error.php
